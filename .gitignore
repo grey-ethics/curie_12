@@ -1,0 +1,122 @@
+# ===========================================
+# General
+# ===========================================
+*.log
+*.env
+*.pyc
+__pycache__/
+.DS_Store
+Thumbs.db
+*.sqlite3
+*.db
+
+
+# ===========================================
+# Python / FastAPI backend
+# ===========================================
+venv/
+env/
+.venv/
+.mypy_cache/
+.pytest_cache/
+dist/
+build/
+*.egg-info/
+instance/
+alembic.ini
+*.pkl
+summarize_codebase.py
+
+
+# ===========================================
+# React frontend
+# ===========================================
+node_modules/
+build/
+dist/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.cache/
+.next/
+out/
+*.tsbuildinfo
+
+# React environment files
+.env.local
+.env.development
+.env.test
+.env.production
+
+
+# ===========================================
+# IDEs / Editors
+# ===========================================
+.vscode/
+.idea/
+*.swp
+
+
+# ===========================================
+# Files to ignore
+# ===========================================
+ehthumbs.db
+Desktop.ini
+full_folder_and_file_and_code_data.md
+codebase_structure_and_signatures.md
+code_reader_06.ps1
+codebase_structure_and_signatures.md
+prompt.md
+snapshot_curie_backend.py
+summarize_codebase.py
+
+
+# ===========================================
+# File Extensions to ignore
+# ===========================================
+*.ps1
+*.tmp
+
+
+# ===========================================
+# Folders to ignore
+# ===========================================
+/temp/
+/logs/
+/old_versions/
+/_code_backups/
+/.qodo/
+/frontend_old/
+_comment_applying_files/
+
+
+# ===========================================
+# New / Mine
+# ===========================================
+
+code_screenshot_backend.py
+code_screenshot_backend_output.md
+
+code_reader_06.ps1
+code_reader_output.md
+
+code_scraper_backend.py
+code_scraper_backend_output.md
+
+# ----- 
+
+code_screenshot_frontend.py
+code_screenshot_frontend_output.md
+
+code_reader_06.ps1
+code_reader_output.md
+
+code_scraper_frontend.py
+code_scraper_frontend_output.md
+
+
+code_scraper_output.md
+code_scraper_project.py
+code_screenshot_output.md
+code_screenshot_output.md
+code_screenshot_project.py

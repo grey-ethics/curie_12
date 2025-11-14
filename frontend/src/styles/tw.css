@@ -1,0 +1,6 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Optional: bridge Tailwind + your CSS variables palette */
+:root, :root[data-theme="dark"] { /* variables are already in variables.css */ }

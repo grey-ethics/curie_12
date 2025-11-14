@@ -1,0 +1,32 @@
+<!doctype html>
+<meta charset="utf-8" />
+<title>SSE Tester</title>
+<style>
+  body { font: 14px system-ui; padding: 16px; }
+  pre { white-space: pre-wrap; border: 1px solid #ccc; padding: 8px; border-radius: 6px; }
+</style>
+<h1>SSE Tester</h1>
+<p>Open console too (F12 → Console).</p>
+<pre id="out"></pre>
+<script>
+  const out = document.getElementById('out');
+  function log(x){ out.textContent += x; }
+
+  async function go() {
+    const url = (window.localStorage.getItem('BACKEND') || 'http://localhost:8000') + '/chat/debug/stream';
+    log('GET ' + url + '\n\n');
+    const res = await fetch(url, { headers: { 'Accept': 'text/event-stream' }});
+    if (!res.body) { log('no body\n'); return; }
+    const reader = res.body.getReader();
+    const dec = new TextDecoder();
+    let buf = '';
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      const chunk = dec.decode(value, { stream: true });
+      buf += chunk;
+      log(chunk); // raw chunks; should appear once per tick
+    }
+  }
+  go();
+</script>

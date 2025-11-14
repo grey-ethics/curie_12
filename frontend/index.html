@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    />
+    <title>Curie</title>
+    <script>
+      (function () {
+        try {
+          var PALETTE = {
+            grey: {
+              swatchRgb: [100, 105, 112],
+              light: [[246, 247, 247], [240, 240, 241]],
+              dark: [[29, 35, 39], [16, 21, 23]],
+              bg: {
+                light: '/assets/media/bg_light_grey.jpg',
+                dark: '/assets/media/bg_dark_grey.jpg',
+              },
+            },
+            blue: {
+              swatchRgb: [34, 113, 177],
+              light: [[240, 246, 252], [197, 217, 237]],
+              dark: [[1, 38, 58], [0, 19, 28]],
+              bg: {
+                light: '/assets/media/bg_light_blue.jpg',
+                dark: '/assets/media/bg_dark_blue.jpg',
+              },
+            },
+            yellow: {
+              swatchRgb: [153, 104, 0],
+              light: [[252, 249, 232], [245, 230, 171]],
+              dark: [[54, 36, 0], [33, 22, 0]],
+              bg: {
+                light: '/assets/media/bg_light_yellow.jpg',
+                dark: '/assets/media/bg_dark_yellow.jpg',
+              },
+            },
+            green: {
+              swatchRgb: [0, 138, 32],
+              light: [[237, 250, 239], [184, 230, 191]],
+              dark: [[0, 48, 8], [0, 28, 5]],
+              bg: {
+                light: '/assets/media/bg_light_green.jpg',
+                dark: '/assets/media/bg_dark_green.jpg',
+              },
+            },
+            red: {
+              swatchRgb: [214, 54, 56],
+              light: [[252, 240, 241], [250, 207, 210]],
+              dark: [[69, 19, 19], [36, 10, 10]],
+              bg: {
+                light: '/assets/media/bg_light_red.jpg',
+                dark: '/assets/media/bg_dark_red.jpg',
+              },
+            },
+          };
+
+          var brand = localStorage.getItem('brand') || 'blue';
+          var mode = localStorage.getItem('mode') || 'light';
+          var root = document.documentElement;
+
+          // class/data for cursor packs
+          root.classList.add('theme-' + brand);
+          root.dataset.brand = brand;
+          root.dataset.mode = mode;
+
+          // apply CSS vars for first paint (matches ThemeProvider logic)
+          var t = PALETTE[brand];
+          var c = mode === 'dark' ? t.dark : t.light;
+          var rgb1 = c[0].join(' ');
+          var rgb2 = c[1].join(' ');
+          root.style.setProperty('--glass-component-1-rgb', rgb1);
+          root.style.setProperty('--glass-component-2-rgb', rgb2);
+          root.style.setProperty('--text', mode === 'dark' ? '#ffffff' : '#1b1b1b');
+          root.style.setProperty('--muted', mode === 'dark' ? '#aaaaaa' : '#666666');
+          root.style.setProperty('--primary', 'rgb(' + t.swatchRgb.join(' ') + ')');
+
+          // optional: set brand wallpaper token immediately
+          var bgUrl = mode === 'dark' ? t.bg.dark : t.bg.light;
+          root.style.setProperty('--app-wallpaper', 'url(' + bgUrl + ')');
+        } catch (e) {}
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

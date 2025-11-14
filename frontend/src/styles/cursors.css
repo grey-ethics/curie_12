@@ -1,0 +1,157 @@
+/* ==========================================================================
+   Theme-aware cursors (no global wait)
+   -------------------------------------------------------------------------- */
+
+/* Shared PNG fallback (hotspot at 0 0) for default + hand-pointer */
+:root {
+  --cur-fallback-png: url('/assets/cursors/default_cursor.png') 0 0;
+}
+
+/* --- GREY --------------------------------------------------------------- */
+html.theme-grey {
+  --cur-default: url('/assets/cursors/grey_cursor/default.cur'), var(--cur-fallback-png);
+  --cur-pointer: url('/assets/cursors/grey_cursor/pointer.cur'), var(--cur-fallback-png);
+  --cur-text: url('/assets/cursors/grey_cursor/text.cur');
+  --cur-help: url('/assets/cursors/grey_cursor/help.cur');
+  --cur-not-allowed: url('/assets/cursors/grey_cursor/not-allowed.cur');
+
+  --cur-move: url('/assets/cursors/grey_cursor/Clear-w-13-Move.cur');
+  --cur-resize-ns: url('/assets/cursors/grey_cursor/Clear-w-09-rVert.ani');
+  --cur-resize-ew: url('/assets/cursors/grey_cursor/Clear-w-10-rHorz.ani');
+  --cur-resize-nwse: url('/assets/cursors/grey_cursor/Clear-w-11-rDir1.ani');
+  --cur-resize-nesw: url('/assets/cursors/grey_cursor/Clear-w-12-rDir2.ani');
+  --cur-crosshair: url('/assets/cursors/grey_cursor/Clear-w-05-Prec.cur');
+}
+
+/* --- BLUE --------------------------------------------------------------- */
+html.theme-blue {
+  --cur-default: url('/assets/cursors/blue_cursor/default.cur'), var(--cur-fallback-png);
+  --cur-pointer: url('/assets/cursors/blue_cursor/pointer.cur'), var(--cur-fallback-png);
+  --cur-text: url('/assets/cursors/blue_cursor/text.cur');
+  --cur-help: url('/assets/cursors/blue_cursor/help.cur');
+  --cur-not-allowed: url('/assets/cursors/blue_cursor/not-allowed.cur');
+
+  --cur-move: url('/assets/cursors/blue_cursor/Clear-b-13-Move.cur');
+  --cur-resize-ns: url('/assets/cursors/blue_cursor/Clear-b-09-rVert.ani');
+  --cur-resize-ew: url('/assets/cursors/blue_cursor/Clear-b-10-rHorz.ani');
+  --cur-resize-nwse: url('/assets/cursors/blue_cursor/Clear-b-11-rDir1.ani');
+  --cur-resize-nesw: url('/assets/cursors/blue_cursor/Clear-b-12-rDir2.ani');
+  --cur-crosshair: url('/assets/cursors/blue_cursor/Clear-b-05-Prec.cur');
+}
+
+/* --- GREEN -------------------------------------------------------------- */
+html.theme-green {
+  --cur-default: url('/assets/cursors/green_cursor/default.cur'), var(--cur-fallback-png);
+  --cur-pointer: url('/assets/cursors/green_cursor/pointer.cur'), var(--cur-fallback-png);
+  --cur-text: url('/assets/cursors/green_cursor/text.cur');
+  --cur-help: url('/assets/cursors/green_cursor/help.cur');
+  --cur-not-allowed: url('/assets/cursors/green_cursor/not-allowed.cur');
+
+  --cur-move: url('/assets/cursors/green_cursor/Clear-g-13-Move.cur');
+  --cur-resize-ns: url('/assets/cursors/green_cursor/Clear-g-09-rVert.ani');
+  --cur-resize-ew: url('/assets/cursors/green_cursor/Clear-g-10-rHorz.ani');
+  --cur-resize-nwse: url('/assets/cursors/green_cursor/Clear-g-11-rDir1.ani');
+  --cur-resize-nesw: url('/assets/cursors/green_cursor/Clear-g-12-rDir2.ani');
+  --cur-crosshair: url('/assets/cursors/green_cursor/Clear-g-05-Prec.cur');
+}
+
+/* --- YELLOW ------------------------------------------------------------- */
+html.theme-yellow {
+  --cur-default: url('/assets/cursors/yellow_cursor/default.cur'), var(--cur-fallback-png);
+  --cur-pointer: url('/assets/cursors/yellow_cursor/pointer.cur'), var(--cur-fallback-png);
+  --cur-text: url('/assets/cursors/yellow_cursor/text.cur');
+  --cur-help: url('/assets/cursors/yellow_cursor/help.cur');
+  --cur-not-allowed: url('/assets/cursors/yellow_cursor/not-allowed.cur');
+
+  --cur-move: url('/assets/cursors/yellow_cursor/Clear-o-13-Move.cur');
+  --cur-resize-ns: url('/assets/cursors/yellow_cursor/Clear-o-09-rVert.ani');
+  --cur-resize-ew: url('/assets/cursors/yellow_cursor/Clear-o-10-rHorz.ani');
+  --cur-resize-nwse: url('/assets/cursors/yellow_cursor/Clear-o-11-rDir1.ani');
+  --cur-resize-nesw: url('/assets/cursors/yellow_cursor/Clear-o-12-rDir2.ani');
+  --cur-crosshair: url('/assets/cursors/yellow_cursor/Clear-o-05-Prec.cur');
+}
+
+/* --- RED --------------------------------------------------------------- */
+html.theme-red {
+  --cur-default: url('/assets/cursors/red_cursor/default.cur'), var(--cur-fallback-png);
+  --cur-pointer: url('/assets/cursors/red_cursor/pointer.cur'), var(--cur-fallback-png);
+  --cur-text: url('/assets/cursors/red_cursor/text.cur');
+  --cur-help: url('/assets/cursors/red_cursor/help.cur');
+  --cur-not-allowed: url('/assets/cursors/red_cursor/not-allowed.cur');
+
+  --cur-move: url('/assets/cursors/red_cursor/Clear-r-13-Move.cur');
+  --cur-resize-ns: url('/assets/cursors/red_cursor/Clear-r-09-rVert.ani');
+  --cur-resize-ew: url('/assets/cursors/red_cursor/Clear-r-10-rHorz.ani');
+  --cur-resize-nwse: url('/assets/cursors/red_cursor/Clear-r-11-rDir1.ani');
+  --cur-resize-nesw: url('/assets/cursors/red_cursor/Clear-r-12-rDir2.ani');
+  --cur-crosshair: url('/assets/cursors/red_cursor/Clear-r-05-Prec.cur');
+}
+
+/* ==========================================================================
+   Base (default)
+   -------------------------------------------------------------------------- */
+html, body {
+  cursor: var(--cur-default, auto), auto !important;
+}
+
+/* Labels should keep the THEMED default unless explicitly linked via `for` */
+:where(label) {
+  cursor: var(--cur-default, auto), auto !important;
+}
+
+/* ==========================================================================
+   Clickable targets -> pointer
+   -------------------------------------------------------------------------- */
+:where(a[href], button, [role="button"], [role="link"],
+      summary, details[open] > summary,
+      input[type="button"], input[type="submit"], input[type="reset"],
+      select, [role="switch"],
+      [data-clickable], .clickable) {
+  cursor: var(--cur-pointer, pointer), pointer !important;
+}
+
+/* Labels that toggle inputs often act like buttons */
+:where(label[for]) {
+  cursor: var(--cur-pointer, pointer), pointer !important;
+}
+
+/* ==========================================================================
+   Text inputs -> text
+   -------------------------------------------------------------------------- */
+:where(input:not([type]),
+      input[type="text"], input[type="email"], input[type="password"],
+      input[type="search"], input[type="tel"], input[type="url"], input[type="number"],
+      textarea, [contenteditable=""], [contenteditable="true"]) {
+  cursor: var(--cur-text, text), text !important;
+}
+
+/* ==========================================================================
+   Help (opt-in)
+   -------------------------------------------------------------------------- */
+:where([data-help], [data-tooltip], [data-hint], .help-cursor) {
+  cursor: var(--cur-help, help), help !important;
+}
+
+/* ==========================================================================
+   Disabled / not-allowed
+   -------------------------------------------------------------------------- */
+:where(:disabled, [aria-disabled="true"], .is-disabled) {
+  cursor: var(--cur-not-allowed, not-allowed), not-allowed !important;
+}
+
+/* ==========================================================================
+   Move / drag (opt-in)
+   -------------------------------------------------------------------------- */
+:where([draggable="true"], .draggable, [data-cursor="move"]) {
+  cursor: var(--cur-move, move), move !important;
+}
+
+/* ==========================================================================
+   Resize (opt-in)
+   -------------------------------------------------------------------------- */
+:where([data-resize="vertical"]) { cursor: var(--cur-resize-ns, ns-resize), ns-resize !important; }
+:where([data-resize="horizontal"]) { cursor: var(--cur-resize-ew, ew-resize), ew-resize !important; }
+:where([data-resize="nwse"]) { cursor: var(--cur-resize-nwse, nwse-resize), nwse-resize !important; }
+:where([data-resize="nesw"]) { cursor: var(--cur-resize-nesw, nesw-resize), nesw-resize !important; }
+
+:where([data-cursor="crosshair"]) { cursor: var(--cur-crosshair, crosshair), crosshair !important; }

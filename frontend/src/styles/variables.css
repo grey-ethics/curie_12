@@ -1,0 +1,49 @@
+/* src/styles/variables.css
+   These are "knobs" + derived tokens. The actual RGBs for each brand/mode
+   are applied at runtime from state/theme.tsx via CSS variables below.
+*/
+
+:root {
+  /* Text + primary defaults (overridden by JS on load) */
+  --text: #1b1b1b;
+  --muted: #666;
+  /* Default brand swatch (blue) */
+  --primary: #2271b1;
+
+  /* =========================================================
+     GLASS THEME CONTROLS (tweak transparency + blur here)
+     *_rgb are provided at runtime by ThemeProvider (brand/mode)
+     ========================================================= */
+  --glass-component-1-transparency: 60; /* % alpha for BG layer */
+  --glass-component-2-transparency: 82; /* % alpha for CARD layer */
+  /* Defaults so first paint looks OK before JS applies brand */
+  --glass-component-1-rgb: 240 246 252; /* light blue BG */
+  --glass-component-2-rgb: 197 217 237; /* light blue CARD */
+  --glass-blur: 12px;
+
+  /* Optional dim/tint overlay (used on video pages) */
+  --stage-overlay-color: 0 0 0;
+  --stage-overlay-opacity: 0.15;
+
+  /* =========================================================
+     DERIVED TOKENS (rest of the app uses these)
+     ========================================================= */
+  --bg: rgb(var(--glass-component-1-rgb) / calc(var(--glass-component-1-transparency) * 1%));
+  --card: rgb(var(--glass-component-2-rgb) / calc(var(--glass-component-2-transparency) * 1%));
+
+  /* Border derived from CARD layer (with a safe minimum alpha) */
+  --border: rgb(
+    var(--glass-component-2-rgb) /
+    calc(max(0.18, (var(--glass-component-2-transparency) * 1%) * 0.30))
+  );
+
+  /* Graceful fallback wallpaper (if video or images fail to load) */
+  --app-wallpaper:
+    radial-gradient(800px 500px at 80% -10%, rgba(80,125,255,.12), transparent 60%),
+    radial-gradient(800px 500px at -20% 110%, rgba(0,200,160,.12), transparent 60%),
+    linear-gradient(180deg, #eef3ff, #f8fbff);
+}
+
+/* We DO NOT use a separate :root[data-theme="dark"] now.
+   Dark/lite is driven by JS applying new RGBs + text color.
+*/
