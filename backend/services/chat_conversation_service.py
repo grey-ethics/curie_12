@@ -1,20 +1,13 @@
 # services/chat_conversation_service.py
 """
-- Chat conversation orchestration for the new TEXT-ONLY chat.
+- Chat conversation orchestration (text-only chat).
 
-- What changed in this revision (high level):
-  • Auto-close widgets silently when the user keeps chatting (already done earlier), AND
-    add a friendly assistant message only when the user explicitly presses the Cancel button.
-  • Intercept greetings like “hi/hello/hey” so they no longer route to RAG and say
-    “No relevant documents found.”; respond with a friendly helper message instead.
-  • Keep the original resume/doc-gen widgets intact for explicit flows.
-  • Add assistant message emission on explicit cancel endpoint so the thread returns to
-    a normal state with a helpful prompt (“How can I help you today?”).
+- Changes in this revision:
+  • Enforce a 45-character cap for session titles in both create & rename flows.
+  • Titles are normalized: collapse whitespace and trim; empty -> fallback handled by CRUD default.
+  • Keep the greeting interception and widget logic unchanged.
 
-- Notes:
-  • No DB schema changes.
-  • No routes changed.
-  • Other features remain unaffected.
+- No DB schema changes; no route changes.
 """
 
 from __future__ import annotations
@@ -62,6 +55,22 @@ from services.tools.talent_recruitment_tool import match_resumes, match_resumes_
 from services.tools.document_generation_tool import run_document_generation
 from services.data_storage_service import build_chat_message_upload_path, save_bytes
 from core.openai_client import chat as openai_chat
+
+
+# single-line comment: Max title length used by service-level sanitization.
+MAX_SESSION_TITLE_LEN = 45
+
+
+# single-line comment: Normalize and clamp a session title; return None if blank after normalization.
+def _sanitize_title(title: str | None) -> str | None:
+    if title is None:
+        return None
+    s = re.sub(r"\s+", " ", title).strip()
+    if not s:
+        return None
+    if len(s) > MAX_SESSION_TITLE_LEN:
+        s = s[:MAX_SESSION_TITLE_LEN]
+    return s
 
 
 # single-line comment: Convert a ChatToolInvocation DB row into an API schema.
@@ -126,7 +135,6 @@ def _classify_intent(user_content: str) -> str:
 # single-line comment: True if the message is just a greeting/salutation.
 def _is_greeting(text: str) -> bool:
     s = (text or "").strip().lower()
-    # keep it tight so real questions don't get trapped
     return bool(re.fullmatch(r"(hi|hello|hey|yo|good\s+(morning|afternoon|evening))\.?", s))
 
 
@@ -135,9 +143,10 @@ def _is_greeting(text: str) -> bool:
 # -------------------------------------------------------------------------------------------------
 
 
-# single-line comment: Create a new chat session for the given account.
+# single-line comment: Create a new chat session for the given account (title sanitized & clamped).
 def create_chat_session_for_user(db: Session, *, account_id: int, title: str | None) -> ChatSessionResponse:
-    sess = create_chat_session(db, account_id=account_id, title=title)
+    safe_title = _sanitize_title(title)
+    sess = create_chat_session(db, account_id=account_id, title=safe_title)
     return _session_to_response(sess)
 
 
@@ -180,7 +189,7 @@ def list_messages_for_session_for_user(db: Session, session_id: int, account_id:
     return out
 
 
-# single-line comment: Rename a chat session owned by the user.
+# single-line comment: Rename a chat session owned by the user (title sanitized & clamped).
 def rename_chat_session_for_user(
     db: Session,
     *,
@@ -191,8 +200,10 @@ def rename_chat_session_for_user(
     sess = get_chat_session_by_id(db, session_id)
     if not sess or sess.account_id != account_id:
         raise HTTPException(status_code=404, detail="Session not found")
-    if new_title and new_title.strip():
-        sess = update_chat_session_title(db, sess, new_title.strip())
+
+    safe_title = _sanitize_title(new_title)
+    if safe_title:
+        sess = update_chat_session_title(db, sess, safe_title)
     return _session_to_response(sess)
 
 
@@ -213,14 +224,9 @@ def post_user_message_and_respond(
     if not sess or sess.account_id != account_id:
         raise HTTPException(status_code=404, detail="Session not found")
 
-    # Detect if anything is pending BEFORE we cancel (for telemetry if needed).
     had_pending = bool(list_pending_invocations_for_session(db, session_id))
-
-    # Auto-cancel any hanging widgets when the user continues chatting.
-    # This keeps the UI clean and removes the inline widget forms.
     cancel_all_pending_invocations_for_session(db, session_id)
 
-    # Store user message
     user_msg = create_chat_message(
         db,
         session_id=session_id,
@@ -229,7 +235,6 @@ def post_user_message_and_respond(
     )
     user_msg_resp = _message_to_response(user_msg)
 
-    # Intercept greetings so they don't go through RAG and produce “No relevant documents found.”
     if _is_greeting(user_content):
         assistant_msg = create_chat_message(
             db,
@@ -243,10 +248,8 @@ def post_user_message_and_respond(
             assistant_message=_message_to_response(assistant_msg),
         )
 
-    # Classify intent for the remaining cases.
     intent = _classify_intent(user_content)
 
-    # branch: resume-match widget
     if intent == "resume_match":
         assistant_text = (
             "I will open the Resume Match widget so you can provide the job description and candidate resumes."
@@ -268,7 +271,6 @@ def post_user_message_and_respond(
         assistant_msg_resp = _message_to_response(assistant_msg, inv)
         return ChatMessageExchangeResponse(user_message=user_msg_resp, assistant_message=assistant_msg_resp)
 
-    # branch: doc-gen widget
     if intent == "doc_gen":
         assistant_text = (
             "I will open the Document Generation widget so you can provide a template and variables to fill."
@@ -290,7 +292,6 @@ def post_user_message_and_respond(
         assistant_msg_resp = _message_to_response(assistant_msg, inv)
         return ChatMessageExchangeResponse(user_message=user_msg_resp, assistant_message=assistant_msg_resp)
 
-    # default branch: RAG answer
     rag_result = run_rag_query_tool(db, query=user_content, limit=5)
     lines: List[str] = [rag_result.answer or "I couldn't find that in your documents, but I can still help. What would you like to do next?"]
     if rag_result.sources:
@@ -313,11 +314,10 @@ def post_user_message_and_respond(
 
 
 # -------------------------------------------------------------------------------------------------
-# widget execution flows (run exactly once)
+# widget execution flows (unchanged)
 # -------------------------------------------------------------------------------------------------
 
 
-# single-line comment: Execute a pending resume-match widget once and return its results (JSON resumes).
 def run_resume_match_tool_invocation(
     db: Session,
     *,
@@ -353,15 +353,8 @@ def run_resume_match_tool_invocation(
             }
         )
 
-    input_payload = {
-        "job_description": job_description,
-        "resumes": resumes,
-    }
-    result_payload = {
-        "job_description": job_description,
-        "rows": rows_payload,
-        "csv_text": result.csv_text,
-    }
+    input_payload = {"job_description": job_description, "resumes": resumes}
+    result_payload = {"job_description": job_description, "rows": rows_payload, "csv_text": result.csv_text}
 
     inv = update_tool_invocation(
         db,
@@ -374,22 +367,13 @@ def run_resume_match_tool_invocation(
     lines: List[str] = ["Here is a summary of the resume match results:"]
     for idx, r in enumerate(rows_payload, start=1):
         lines.append(f"{idx}. {r['name']} — match: {r['match']}%")
-    assistant_msg = create_chat_message(
-        db,
-        session_id=session_id,
-        role=MessageRole.assistant,
-        content="\n".join(lines),
-    )
+    assistant_msg = create_chat_message(db, session_id=session_id, role=MessageRole.assistant, content="\n".join(lines))
 
     summarize_session_if_needed(db, session_id)
 
-    return ToolInvocationRunResponse(
-        invocation=_invocation_to_response(inv),
-        assistant_message=_message_to_response(assistant_msg),
-    )
+    return ToolInvocationRunResponse(invocation=_invocation_to_response(inv), assistant_message=_message_to_response(assistant_msg))
 
 
-# single-line comment: Execute a pending doc-gen widget once and return its generated document.
 def run_doc_gen_tool_invocation(
     db: Session,
     *,
@@ -413,13 +397,8 @@ def run_doc_gen_tool_invocation(
 
     content = run_document_generation(template, variables or {})
 
-    input_payload = {
-        "template": template,
-        "variables": variables or {},
-    }
-    result_payload = {
-        "content": content,
-    }
+    input_payload = {"template": template, "variables": (variables or {})}
+    result_payload = {"content": content}
 
     inv = update_tool_invocation(
         db,
@@ -438,13 +417,9 @@ def run_doc_gen_tool_invocation(
 
     summarize_session_if_needed(db, session_id)
 
-    return ToolInvocationRunResponse(
-        invocation=_invocation_to_response(inv),
-        assistant_message=_message_to_response(assistant_msg),
-    )
+    return ToolInvocationRunResponse(invocation=_invocation_to_response(inv), assistant_message=_message_to_response(assistant_msg))
 
 
-# single-line comment: Execute resume-match using uploaded files (pdf/docx/txt). Also accepts optional JD text.
 def run_resume_match_tool_invocation_from_files(
     db: Session,
     *,
@@ -475,9 +450,7 @@ def run_resume_match_tool_invocation_from_files(
         file_path, _ = save_bytes(path, data)
         saved.append({"filename": f.filename, "path": file_path})
 
-    talent_result, final_jd = match_resumes_from_files(
-        job_description=job_description, uploaded_files=saved, llm_resumes=None
-    )
+    talent_result, final_jd = match_resumes_from_files(job_description=job_description, uploaded_files=saved, llm_resumes=None)
 
     rows_payload: List[Dict[str, Any]] = [
         {"name": r.name, "match": r.match, "strengths": r.strengths, "weaknesses": r.weaknesses, "reason": r.reason}
@@ -488,10 +461,7 @@ def run_resume_match_tool_invocation_from_files(
         db,
         inv,
         status=ChatToolStatus.completed,
-        input_payload={
-            "job_description": job_description or "",
-            "uploaded_files": [{"filename": x["filename"]} for x in saved],
-        },
+        input_payload={"job_description": job_description or "", "uploaded_files": [{"filename": x["filename"]} for x in saved]},
         result_payload={"job_description": final_jd, "rows": rows_payload, "csv_text": talent_result.csv_text},
     )
 
@@ -502,13 +472,10 @@ def run_resume_match_tool_invocation_from_files(
 
     summarize_session_if_needed(db, session_id)
 
-    return ToolInvocationRunResponse(
-        invocation=_invocation_to_response(inv),
-        assistant_message=_message_to_response(assistant_msg),
-    )
+    return ToolInvocationRunResponse(invocation=_invocation_to_response(inv), assistant_message=_message_to_response(assistant_msg))
 
 
-# single-line comment: Cancel a pending widget; if this is an explicit user action, also post a friendly message.
+# single-line comment: Cancel a pending widget; unchanged from prior revision.
 def cancel_tool_invocation_for_user(
     db: Session,
     *,
@@ -526,12 +493,6 @@ def cancel_tool_invocation_for_user(
 
     if inv.status == ChatToolStatus.pending:
         inv = update_tool_invocation(db, inv, status=ChatToolStatus.cancelled)
-        # Emit a short assistant message so the UI flows back into normal chat mode.
-        create_chat_message(
-            db,
-            session_id=session_id,
-            role=MessageRole.assistant,
-            content="Okay, I’ve closed that widget. How can I help you today?",
-        )
+        create_chat_message(db, session_id=session_id, role=MessageRole.assistant, content="Okay, I’ve closed that widget. How can I help you today?")
 
     return _invocation_to_response(inv)

@@ -1,0 +1,5 @@
+/* ==========================================================================
+   TABLES
+   ========================================================================== */
+.table { width: 100%; border-collapse: collapse }
+.table th, .table td { padding: 8px; border-bottom: 1px solid var(--border) }

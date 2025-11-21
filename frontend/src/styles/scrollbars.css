@@ -1,0 +1,87 @@
+/* ==========================================================================
+   Slim “floating” scrollbars for chat list + chat window + output box
+   ========================================================================== */
+
+/* Firefox and other browsers that DON'T support ::-webkit-scrollbar */
+@supports not selector(::-webkit-scrollbar) {
+  .sidebar .chat-sessions,
+  .chat-window,
+  .text-output,
+  .scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: var(--scrollbar-thumb) transparent;
+  }
+}
+
+/* WebKit (Chrome, Edge, etc.) */
+.sidebar .chat-sessions::-webkit-scrollbar,
+.chat-window::-webkit-scrollbar,
+.text-output::-webkit-scrollbar,
+.scrollbar::-webkit-scrollbar {
+  width: var(--scrollbar-width);
+  height: var(--scrollbar-width);
+}
+
+/* transparent track so the thumb looks like it’s floating */
+.sidebar .chat-sessions::-webkit-scrollbar-track,
+.chat-window::-webkit-scrollbar-track,
+.text-output::-webkit-scrollbar-track,
+.scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* pill thumb */
+.sidebar .chat-sessions::-webkit-scrollbar-thumb,
+.chat-window::-webkit-scrollbar-thumb,
+.text-output::-webkit-scrollbar-thumb,
+.scrollbar::-webkit-scrollbar-thumb {
+  background-color: var(--scrollbar-thumb);
+  border-radius: var(--scrollbar-radius);
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+/* hover state (a bit more solid) */
+.sidebar .chat-sessions::-webkit-scrollbar-thumb:hover,
+.chat-window::-webkit-scrollbar-thumb:hover,
+.text-output::-webkit-scrollbar-thumb:hover,
+.scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: var(--scrollbar-thumb-hover);
+}
+
+/* Arrow buttons: slim triangles on a fully transparent background */
+.sidebar .chat-sessions::-webkit-scrollbar-button,
+.chat-window::-webkit-scrollbar-button,
+.text-output::-webkit-scrollbar-button,
+.scrollbar::-webkit-scrollbar-button {
+  width: var(--scrollbar-width);
+  height: 10px;
+  background: transparent;
+  border: none;
+}
+
+/* Up arrow */
+.sidebar .chat-sessions::-webkit-scrollbar-button:vertical:decrement,
+.chat-window::-webkit-scrollbar-button:vertical:decrement,
+.text-output::-webkit-scrollbar-button:vertical:decrement,
+.scrollbar::-webkit-scrollbar-button:vertical:decrement {
+  border-style: solid;
+  border-width: 0 4px 6px 4px;
+  border-color: transparent transparent var(--scrollbar-thumb) transparent;
+}
+
+/* Down arrow */
+.sidebar .chat-sessions::-webkit-scrollbar-button:vertical:increment,
+.chat-window::-webkit-scrollbar-button:vertical:increment,
+.text-output::-webkit-scrollbar-button:vertical:increment,
+.scrollbar::-webkit-scrollbar-button:vertical:increment {
+  border-style: solid;
+  border-width: 6px 4px 0 4px;
+  border-color: var(--scrollbar-thumb) transparent transparent transparent;
+}
+
+/* Hide any corner filler some browsers add */
+.sidebar .chat-sessions::-webkit-scrollbar-corner,
+.chat-window::-webkit-scrollbar-corner,
+.text-output::-webkit-scrollbar-corner,
+.scrollbar::-webkit-scrollbar-corner { background: transparent; }

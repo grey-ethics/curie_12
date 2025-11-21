@@ -1,0 +1,88 @@
+/* ==========================================================================
+   CHAT
+   ========================================================================== */
+.chat-page {
+  display: grid; grid-template-rows: 1fr; /* no top header row */
+  gap: 12px; min-height: 0; height: 100%;
+}
+.chat-header { display: flex; align-items: center; justify-content: space-between; }
+.chat-body { display: grid; grid-template-columns: 240px 1fr; gap: 12px; }
+.chat-main {
+  display: grid; grid-template-rows: 1fr auto auto; /* window, composer, underbar */
+  gap: 10px; min-height: 0; height: 100%;
+}
+/* Under-composer controls aligned to the right */
+.chat-underbar { display: flex; justify-content: flex-end; }
+.chat-window {
+  background: var(--card); border: 1px solid var(--border); border-radius: 8px;
+  padding: 8px; overflow: auto; min-height: 0;
+  backdrop-filter: blur(var(--glass-blur)); -webkit-backdrop-filter: blur(var(--glass-blur));
+}
+
+/* Legacy bubbles (kept harmless if unused) */
+.chat-bubble { margin: 6px 0; }
+.chat-bubble .role { font-size: 11px; color: var(--muted) }
+.chat-bubble .content { white-space: pre-wrap }
+
+/* Composer */
+.chat-composer { display: grid; grid-template-columns: 1fr auto; gap: 8px }
+.chat-composer input {
+  padding: 10px; border: 1px solid var(--border);
+  border-radius: 8px; background: var(--bg); color: var(--text);
+  backdrop-filter: blur(var(--glass-blur)); -webkit-backdrop-filter: blur(var(--glass-blur));
+}
+.chat-composer button {
+  padding: 10px 12px; border: 1px solid var(--border);
+  background: var(--bg); border-radius: 8px; cursor: pointer;
+  backdrop-filter: blur(var(--glass-blur)); -webkit-backdrop-filter: blur(var(--glass-blur));
+}
+
+/* New glass/3D chat bubbles */
+.bubble-row { display: flex; padding: 6px 4px; }
+.bubble-row.left { justify-content: flex-start; }
+.bubble-row.right { justify-content: flex-end; }
+
+/* Bubbles never full width; soft shadow + inner highlight */
+.bubble {
+  max-width: min(68ch, 72%); width: fit-content;
+  border-radius: 14px; padding: 10px 12px;
+  white-space: pre-wrap; word-break: break-word; line-height: 1.45;
+  box-shadow: 0 6px 18px rgba(0,0,0,.18), inset 0 1px 0 rgba(255,255,255,.35);
+  border: 1px solid rgba(0,0,0,.08);
+  backdrop-filter: blur(var(--glass-blur)); -webkit-backdrop-filter: blur(var(--glass-blur));
+  background: linear-gradient(
+    180deg,
+    rgb(var(--glass-component-2-rgb) / .82),
+    rgb(var(--glass-component-1-rgb) / .64)
+  );
+}
+.bubble.assistant { border-color: rgba(0,0,0,.10); }
+.bubble.user {
+  background: linear-gradient(
+    180deg,
+    rgb(var(--glass-component-2-rgb) / .92),
+    rgb(var(--glass-component-1-rgb) / .78)
+  );
+  border-color: rgba(0,0,0,.12);
+}
+
+.bubble-meta { margin-top: 8px; font-size: 12px; opacity: .75; }
+.bubble-widget { margin-top: 12px; }
+
+/* Files list inside bubbles */
+.files-list {
+  margin-top: 10px; border-top: 1px solid rgba(0,0,0,0.08);
+  padding-top: 8px; display: flex; flex-direction: column; gap: 4px;
+}
+.files-title { font-size: 12px; opacity: .75; }
+.file-link {
+  font-size: 13px; text-decoration: underline; display: inline-flex;
+  gap: 6px; align-items: center; color: var(--primary);
+}
+.file-badge {
+  font-size: 10px; text-transform: uppercase; border-radius: 4px; padding: 1px 4px;
+  background: rgba(0,0,0,.10);
+}
+.file-badge.input  { background: rgba(0,128,0,.18); }
+.file-badge.output { background: rgba(0,0,128,.18); }
+.file-size { opacity: .6; font-size: 11px; }

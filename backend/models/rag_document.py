@@ -1,8 +1,8 @@
-
 """
 - Two tables to store RAG documents and their chunks.
-- Documents are uploaded by admins.
-- Each chunk may have an embedding for semantic search.
+- Changes in this revision:
+  • Added a UNIQUE constraint on content_sha256 so exact-duplicate content can’t be inserted concurrently.
+  • Kept the existing plain index as well (Postgres will implicitly index UNIQUE, but we keep index=True for clarity).
 """
 
 from sqlalchemy import (
@@ -21,7 +21,7 @@ from core.db import Base
 
 
 class RagDocument(Base):
-    # SQLAlchemy model for rag_documents
+    # single-line comment: Documents table; content_sha256 is UNIQUE to prevent duplicate-content inserts at DB level.
     __tablename__ = "rag_documents"
 
     id = Column(Integer, primary_key=True)
@@ -31,7 +31,7 @@ class RagDocument(Base):
 
     file_path = Column(String(1024), nullable=True)
     file_size = Column(Integer, nullable=True)
-    content_sha256 = Column(String(64), nullable=True, index=True)
+    content_sha256 = Column(String(64), nullable=True, unique=True, index=True)
     doc_embedding = Column(JSON, nullable=True)
 
     created_at = Column(DateTime(timezone=True), server_default=func.now())
@@ -40,7 +40,7 @@ class RagDocument(Base):
 
 
 class RagDocumentChunk(Base):
-    # SQLAlchemy model for rag_document_chunks
+    # single-line comment: Chunk table; each chunk stores raw text and (optionally) an embedding.
     __tablename__ = "rag_document_chunks"
 
     id = Column(Integer, primary_key=True)

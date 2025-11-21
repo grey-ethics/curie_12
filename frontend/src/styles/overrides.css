@@ -1,0 +1,81 @@
+/* ==========================================================================
+   OVERRIDES (rare, high-specificity, opt-in)
+   Loaded last — use for deliberate, final overrides only.
+   ========================================================================== */
+
+/* Load Inter here so this file can enforce the font on the action buttons */
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600&display=swap");
+
+
+/* Full transparency when chrome is transparent (already applied in app-shell too) */
+.app-blade:has(> .app-root.chrome-transparent) {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  border-radius: 0 !important;
+  overflow: visible !important;
+}
+
+/* ========================================================================== */
+/* RAG Upload row — make BOTH action buttons (Select + Upload) identical       */
+/* NOTE: use descendant selector (no ">") so wrappers won't block the styles   */
+/* ========================================================================== */
+
+.card .upload4-grid .pane .btn-fill,
+.card .upload4-grid .pane button.btn-fill,
+.card .upload4-grid .pane label.btn-fill {
+  /* font (wins because overrides.css loads last) */
+  font-family: 'Manrope', system-ui, -apple-system, "Segoe UI", Roboto,
+              "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif !important;
+  font-weight: 500;
+
+  /* identical visuals (Design E) */
+  height: 100%;
+  width: 100%;
+  display: flex; align-items: center; justify-content: center;
+  padding-inline: 12px;
+
+  border: 1.5px solid transparent; /* gradient border via background-clip trick */
+  background:
+    linear-gradient(var(--bg), var(--bg)) padding-box,
+    linear-gradient(135deg,
+      color-mix(in srgb, var(--text) 18%, transparent),
+      color-mix(in srgb, var(--border) 100%, transparent)) border-box;
+
+  color: var(--text);
+  border-radius: 12px;
+
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+
+  box-shadow: 0 8px 20px color-mix(in srgb, var(--text) 8%, transparent);
+  transition: box-shadow .2s ease, transform .05s ease, filter .15s ease;
+
+  /* ensure any inherited button styles don’t override the gradient */
+  border-image: initial;
+  background-clip: padding-box, border-box;
+}
+
+/* Ensure any nested spans/icons inherit the same face */
+.card .upload4-grid .pane .btn-fill * {
+  font-family: inherit !important;
+  font-weight: inherit;
+}
+
+/* States */
+.card .upload4-grid .pane .btn-fill:hover {
+  filter: brightness(1.02);
+  box-shadow: 0 12px 28px color-mix(in srgb, var(--text) 12%, transparent);
+}
+.card .upload4-grid .pane .btn-fill:active {
+  transform: translateY(1px);
+}
+
+/* IMPORTANT: do not dim the disabled Upload button — keep visuals identical */
+.card .upload4-grid .pane .btn-fill[disabled] {
+  opacity: 1;             /* was .55; this caused the mismatch */
+  cursor: not-allowed;
+}

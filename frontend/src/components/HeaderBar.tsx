@@ -4,14 +4,16 @@ import { Link } from 'react-router-dom'
 import OptionsMenu from './OptionsMenu'
 import { getProfile } from '../api/me'
 import { useAuth } from '../state/auth'
+import { useTheme } from '../state/theme'
 
 export default function HeaderBar({ context }: { context: 'public' | 'portal' }) {
   const { actor } = useAuth()
-  const [logo, setLogo] = useState<string | null>(null)
+  const { mode } = useTheme()
+  const [orgLogo, setOrgLogo] = useState<string | null>(null)
 
   useEffect(() => {
     if (context === 'portal') {
-      getProfile().then(p => setLogo(p?.logo_url || null)).catch(() => {})
+      getProfile().then(p => setOrgLogo(p?.logo_url || null)).catch(() => {})
     }
   }, [context, actor])
 
@@ -22,12 +24,19 @@ export default function HeaderBar({ context }: { context: 'public' | 'portal' })
     return '/'
   }, [actor])
 
+  // Theme-aware default logos
+  const defaultLogo = mode === 'dark'
+    ? '/assets/curie_logo_dark.png'
+    : '/assets/curie_logo_light.png'
+
+  const logoSrc = orgLogo || defaultLogo
+
   return (
     <header className="header">
       <div className="header-left" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
         <Link to={homePath} aria-label="Home" title="Home">
           <img
-            src={logo || '/assets/curie_logo.png'}
+            src={logoSrc}
             alt="Curie"
             className="logo"
             style={{ height: 28, borderRadius: 6 }}

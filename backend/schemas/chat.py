@@ -1,22 +1,27 @@
 """
-- Schemas for chat sessions, messages, and UI-based tool invocations.
-- Sessions: create/list/get/update.
-- Messages: user/assistant messages plus optional tool_invocation metadata.
-- Widgets: request/response payloads for running resume-match and doc-gen once per invocation.
+- Chat session title guardrails added:
+  • Cap title length at 45 characters using constrained types.
+  • Strip surrounding whitespace automatically.
+- Keeps existing response models untouched.
+- No DB schema changes required.
 """
 
 from typing import List, Dict, Any
-from pydantic import BaseModel
+from pydantic import BaseModel, constr
+
+# single-line comment: Max allowed characters for a chat session title.
+MAX_SESSION_TITLE_LEN = 45
+TitleStr = constr(strip_whitespace=True, max_length=MAX_SESSION_TITLE_LEN)  # type: ignore[name-defined]
 
 
 class ChatSessionCreateRequest(BaseModel):
-    # create new chat session
-    title: str | None = None
+    # create new chat session (optional title)
+    title: TitleStr | None = None
 
 
 class ChatSessionUpdateRequest(BaseModel):
-    # update an existing chat session (right now only title)
-    title: str | None = None
+    # update an existing chat session's title
+    title: TitleStr | None = None
 
 
 class ChatSessionResponse(BaseModel):
@@ -71,7 +76,7 @@ class ChatMessageExchangeResponse(BaseModel):
     """
     Response when posting a new user message:
     - user_message: the stored user message
-    - assistant_message: the immediate assistant reply (plain text or tool-trigger that spawns a widget)
+    - assistant_message: the immediate assistant reply (plain text or tool-trigger)
     """
     user_message: ChatMessageResponse
     assistant_message: ChatMessageResponse

@@ -1,0 +1,37 @@
+/* ==========================================================================
+   BUTTONS (generic button looks)
+   ========================================================================== */
+
+/* Transparent, lift-on-hover (for “+ New Chat”, “Upload & Documents”) */
+.btn-float {
+  padding: 8px 10px;
+  border: 1px solid transparent;
+  background: transparent;
+  border-radius: 8px;
+  cursor: var(--cur-pointer, pointer), pointer;
+  transition: transform .15s ease, box-shadow .15s ease, background-color .15s ease;
+}
+.btn-float:hover { transform: translateY(-1px); }
+.btn-float:focus-visible {
+  outline: 2px solid var(--primary); outline-offset: 2px;
+  box-shadow: 0 0 0 6px rgb(var(--glass-component-2-rgb) / .18);
+}
+
+/* Glassy oval/pill (for “Admin Options” / “User Options”) */
+.btn-glass {
+  padding: 8px 10px;
+  border: 1px solid transparent;
+  background: transparent;
+  border-radius: 8px;
+  cursor: var(--cur-pointer, pointer), pointer;
+  transition: transform .15s ease, box-shadow .15s ease, background-color .15s ease;
+}
+.btn-glass:hover {
+  transform: translateY(-1px);
+  background: rgb(var(--glass-component-2-rgb) / .10);
+  box-shadow: 0 6px 18px rgba(0,0,0,.18);
+}
+.btn-glass:focus-visible {
+  outline: 2px solid var(--primary); outline-offset: 2px;
+  box-shadow: 0 0 0 6px rgb(var(--glass-component-2-rgb) / .18);
+}

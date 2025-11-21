@@ -1,16 +1,23 @@
 /*
-- Keeps the hook API but adds reload() so children can refresh messages after widget runs.
-- send() remains JSON text-only.
+- Inline rename now sanitizes and clamps the title on the client:
+  • Collapse whitespace, trim, and slice to 45 chars before calling API.
+  • Also keeps old prompt flow when no title provided to rename().
+- All other behavior (routing, loading, sending) unchanged.
 */
-
 import { useEffect, useMemo, useState } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import * as chat from '../api/chat'
 import type { ChatMessage, ChatSession } from '../api/types'
 
 type Base = 'user' | 'admin'
+const MAX_TITLE = 45
 
-// single-line comment: useUrlChat wires URL state ↔ chat API and exposes helpers for the chat pages.
+// single-line comment: Normalize and clamp a session title on the client.
+function sanitizeTitle(t: string) {
+  const normalized = (t ?? '').replace(/\s+/g, ' ').trim()
+  return normalized.slice(0, MAX_TITLE)
+}
+
 export function useUrlChat(base: Base) {
   const nav = useNavigate()
   const { pathname } = useLocation()
@@ -35,7 +42,6 @@ export function useUrlChat(base: Base) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [prefix])
 
-  // single-line comment: Helper – fetch messages for a session.
   async function loadMessages(sessionId: number) {
     try {
       const m = await chat.getMessages(sessionId)
@@ -45,18 +51,9 @@ export function useUrlChat(base: Base) {
     }
   }
 
-  // single-line comment: Public reload so children can refresh after widget actions.
-  const reload = async () => {
-    if (sid) await loadMessages(sid)
-  }
+  const reload = async () => { if (sid) await loadMessages(sid) }
+  useEffect(() => { if (!sid) { setMessages([]); return } void loadMessages(sid) }, [sid])
 
-  // single-line comment: When active session changes, (re)load messages.
-  useEffect(() => {
-    if (!sid) { setMessages([]); return }
-    void loadMessages(sid)
-  }, [sid])
-
-  // single-line comment: Navigation helpers and CRUD.
   const open = (id: number) => nav(`${prefix}/${id}`)
 
   const create = async () => {
@@ -65,10 +62,13 @@ export function useUrlChat(base: Base) {
     nav(`${prefix}/${s.id}`)
   }
 
-  const rename = async (id: number) => {
-    const title = window.prompt('New title?')
-    if (!title && title !== '') return
-    const s = await chat.renameSession(id, title)
+  // single-line comment: Inline-friendly rename; optional title bypasses prompt and is sanitized.
+  const rename = async (id: number, newTitle?: string) => {
+    let title: string | null | undefined = newTitle
+    if (title === undefined) title = window.prompt('New title?')
+    if (title === null || title === undefined) return
+    const final = sanitizeTitle(title)
+    const s = await chat.renameSession(id, final)
     setSessions(v => v.map(x => (x.id === id ? s : x)))
   }
 
@@ -84,35 +84,18 @@ export function useUrlChat(base: Base) {
     })
   }
 
-  // single-line comment: Send a text-only message; backend expects JSON { content }.
   const send = async (id: number, content: string) => {
     try {
       await chat.sendMessage(id, content?.trim() || '(message)')
     } catch (e: any) {
       alert(e?.message || 'Failed to send message')
     } finally {
-      await loadMessages(id) // always sync to server truth
+      await loadMessages(id)
     }
   }
 
   const active = sid
-  const title = useMemo(() => {
-    const s = sessions.find(x => x.id === sid)
-    return s?.title || 'Chat Session'
-  }, [sessions, sid])
+  const title = useMemo(() => sessions.find(x => x.id === sid)?.title || 'Chat Session', [sessions, sid])
 
-  return {
-    sessions,
-    active,
-    messages,
-    title,
-    open,
-    create,
-    rename,
-    remove,
-    send,
-    reload,
-    prefix,
-    pathname,
-  }
+  return { sessions, active, messages, title, open, create, rename, remove, send, reload, prefix, pathname }
 }

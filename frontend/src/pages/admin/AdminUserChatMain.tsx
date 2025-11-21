@@ -1,8 +1,3 @@
-/*
-- Passes sessionId (active) and onUpdated (reload) to ChatWindow so widgets can refresh the thread after running.
-- No other changes to layout or the composer.
-*/
-
 import { useState } from 'react'
 import ChatWindow from '../../components/Chat/ChatWindow'
 import ChatComposer from '../../components/Chat/ChatComposer'
@@ -16,21 +11,15 @@ function buildContent(raw: string, widgets: WidgetState): string {
   const pieces: string[] = []
 
   if (widgets.useDocuments) {
-    pieces.push(
-      'Use the uploaded company documents as primary context when answering.'
-    )
+    pieces.push('Use the uploaded company documents as primary context when answering.')
   } else {
-    pieces.push(
-      'Answer using your general knowledge. Do not rely on uploaded company documents.'
-    )
+    pieces.push('Answer using your general knowledge. Do not rely on uploaded company documents.')
   }
 
   if (widgets.answerStyle === 'short') {
     pieces.push('Keep the answer very short (2–3 sentences).')
   } else if (widgets.answerStyle === 'detailed') {
-    pieces.push(
-      'Provide a detailed, step-by-step explanation with any important caveats, suitable for an admin reviewing user queries.'
-    )
+    pieces.push('Provide a detailed, step-by-step explanation with any important caveats, suitable for an admin reviewing user queries.')
   }
 
   pieces.push(raw)
@@ -38,22 +27,14 @@ function buildContent(raw: string, widgets: WidgetState): string {
 }
 
 export default function AdminUserChatMain() {
-  const { title, active, messages, send, reload } = useUrlChat('admin')
+  const { active, messages, send, reload } = useUrlChat('admin') // title removed
   const [widgets, setWidgets] = useState<WidgetState>(() => defaultWidgetState())
 
   return (
     <section className="chat-page">
-      <div className="chat-header">
-        <div className="left">
-          <h2>{title}</h2>
-        </div>
-        <div className="right">
-          <ChatWidgets state={widgets} onChange={setWidgets} />
-        </div>
-      </div>
-
       <div className="chat-main">
         <ChatWindow messages={messages} sessionId={active} onUpdated={reload} />
+
         <ChatComposer
           disabled={!active}
           onSend={async (t) => {
@@ -64,6 +45,11 @@ export default function AdminUserChatMain() {
           }}
           placeholder="Ask using company docs…"
         />
+
+        {/* Controls moved UNDER the composer */}
+        <div className="chat-underbar">
+          <ChatWidgets state={widgets} onChange={setWidgets} />
+        </div>
       </div>
     </section>
   )

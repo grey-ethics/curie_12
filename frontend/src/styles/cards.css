@@ -1,0 +1,44 @@
+/* ==========================================================================
+- file: src/styles/cards.css
+- changes:
+  • Add .card-divider for a clean in-card section split.
+  • Add .text-output--log to reduce only the Output box height.
+  • Keep base .text-output sizing to avoid affecting other uses (e.g., selected files list).
+   ========================================================================== */
+
+.container { display: grid; gap: 16px; min-width: 0; }
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px;
+  backdrop-filter: blur(var(--glass-blur)); -webkit-backdrop-filter: blur(var(--glass-blur));
+}
+.output-pane { max-height: 220px; }
+
+/* Admin upload output box */
+.text-output {
+  height: 220px;
+  padding: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  border-radius: 8px;
+  overflow: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  line-height: 1.35;
+}
+
+/* single-line comment: Divider line for separating upload controls from output log within the same card. */
+.card-divider {
+  border: 0;
+  border-top: 1px solid var(--border);
+  margin: 6px 0;
+  opacity: 0.9;
+}
+
+/* single-line comment: Reduced-height variant used only for the Output log area. */
+.text-output--log {
+  height: 180px;
+}

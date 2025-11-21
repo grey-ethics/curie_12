@@ -1,0 +1,85 @@
+/* ==========================================================================
+   SIDEBAR
+   - Fix session row layout so action buttons never get pushed off-screen.
+   - Constrain the name cell to a fixed (flexible) width and ellipsize overflow.
+   - Keep the scroll area stable and avoid lateral scroll.
+   ========================================================================== */
+.sidebar {
+  border-right: 1px solid var(--border);
+  background: var(--card);
+  padding: 16px;
+  display: flex; flex-direction: column;
+  min-height: 0; height: 100%;
+  overflow: hidden; /* prevent sidebar from creating a global scrollbar */
+  backdrop-filter: blur(var(--glass-blur)); -webkit-backdrop-filter: blur(var(--glass-blur));
+}
+.sidebar-section { margin-bottom: 16px }
+.sidebar-section h4 { margin: 0 0 6px 0; }
+
+/* last section (User Options area) grows and can contain the scrollable list */
+.sidebar-section:last-child { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
+
+.admin-label, .user-label { font-weight: 500; }
+
+/* Sidebar nav items (e.g. "Upload & Documents") */
+.nav-item { width: 100%; text-align: left; display: block; }
+.nav-item.active { border-color: transparent; }
+
+/* Chat sessions inside sidebar */
+.sidebar .chat-sessions {
+  flex: 1 1 auto; min-height: 0;
+  max-height: calc(100dvh - 260px);
+  overflow-y: auto; overflow-x: hidden;
+}
+.sidebar .chat-sessions ul { padding: 0; margin: 0; list-style: none; }
+.sidebar .chat-sessions li .row-actions button { background: none; border: none; cursor: pointer; }
+
+/* Session rows with inline rename/delete */
+.session-row {
+  /* Name column cannot grow beyond its grid cell; actions stay visible. */
+  display: grid; grid-template-columns: minmax(0,1fr) auto; align-items: center;
+  gap: 6px; padding: 6px 6px; border-radius: 8px;
+}
+.session-row.active { outline: 2px solid var(--border); outline-offset: 2px; }
+.session-row.active .session-name { font-weight: 600; }
+
+.session-name {
+  background: none; border: none; text-align: left; color: inherit; cursor: pointer;
+  padding: 6px 8px; border-radius: 6px; width: 100%;
+  /* Truncation behavior */
+  min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+
+.session-edit {
+  width: 100%;
+  padding: 6px 8px; border: 1px solid var(--border);
+  background: var(--bg); color: var(--text); border-radius: 6px;
+}
+
+.row-actions { display: inline-flex; gap: 6px; }
+.icon-btn { background: none; border: none; cursor: pointer; padding: 4px; border-radius: 6px; }
+.icon-btn img { width: 16px; height: 16px; display: block; }
+
+/* Keep chrome-transparent from stripping header look; only relax non-glass buttons */
+.chrome-transparent .sidebar .sidebar-section > button:not(.btn-glass),
+.chrome-transparent .sidebar .session-name,
+.chrome-transparent .sidebar .row-actions .icon-btn {
+  background: transparent !important;
+  border: 1px solid transparent !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important; -webkit-backdrop-filter: none !important;
+  transition: transform .15s ease, box-shadow .15s ease, background-color .15s ease;
+}
+.chrome-transparent .sidebar .sidebar-section > button:not(.btn-glass):hover,
+.chrome-transparent .sidebar .session-name:hover,
+.chrome-transparent .sidebar .row-actions .icon-btn:hover {
+  transform: translateY(-1px);
+  background: rgb(var(--glass-component-2-rgb) / .10);
+  box-shadow: 0 6px 18px rgba(0,0,0,.18);
+}
+.chrome-transparent .sidebar .sidebar-section > button:not(.btn-glass):focus-visible,
+.chrome-transparent .sidebar .session-name:focus-visible,
+.chrome-transparent .sidebar .row-actions .icon-btn:focus-visible {
+  outline: 2px solid var(--primary); outline-offset: 2px;
+  box-shadow: 0 0 0 6px rgb(var(--glass-component-2-rgb) / .18);
+}

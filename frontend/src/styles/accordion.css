@@ -1,0 +1,22 @@
+/* ==========================================================================
+   ACCORDION
+   ========================================================================== */
+.accordion-header {
+  width: 100%;
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+}
+/* Persist the hover "floating-box" look on the selected header */
+.accordion-header.btn-glass[aria-expanded="true"] {
+  transform: translateY(-1px);
+  background: rgb(var(--glass-component-2-rgb) / .10);
+  box-shadow: 0 6px 18px rgba(0,0,0,.18);
+}
+
+/* Accordion body uses the speed/ease variables */
+.accordion-body {
+  overflow: hidden;
+  max-height: 0;
+  transition: max-height var(--accordion-speed) var(--accordion-ease);
+  padding: 0 2px;
+}
+.accordion-body.open { max-height: 1000px; margin-top: 8px; }

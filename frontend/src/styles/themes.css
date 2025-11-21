@@ -1,0 +1,47 @@
+/* ==========================================================================
+   THEMES (dark-mode tweaks)
+   ========================================================================== */
+:root[data-mode="dark"] ::selection { background: rgba(255,255,255,.25); color: #ffffff; }
+
+:root[data-mode="dark"] input,
+:root[data-mode="dark"] select,
+:root[data-mode="dark"] textarea,
+:root[data-mode="dark"] button,
+:root[data-mode="dark"] .dropdown-menu button,
+:root[data-mode="dark"] .sidebar button,
+:root[data-mode="dark"] .card,
+:root[data-mode="dark"] .chat-window {
+  color: #ffffff;
+  caret-color: #ffffff;
+}
+:root[data-mode="dark"] input,
+:root[data-mode="dark"] select,
+:root[data-mode="dark"] textarea,
+:root[data-mode="dark"] .card button,
+:root[data-mode="dark"] .dropdown-menu button {
+  border-color: rgba(255,255,255,.45);
+}
+:root[data-mode="dark"] input:focus,
+:root[data-mode="dark"] select:focus,
+:root[data-mode="dark"] textarea:focus,
+:root[data-mode="dark"] .card button:focus,
+:root[data-mode="dark"] .dropdown-menu button:focus {
+  outline: 2px solid #ffffff;
+  outline-offset: 0;
+  border-color: #ffffff;
+}
+
+/* Bubble contrast tuning in dark mode */
+:root[data-mode="dark"] .bubble {
+  border-color: rgba(255,255,255,.20);
+  box-shadow:
+    0 8px 22px rgba(0,0,0,.45),
+    inset 0 1px 0 rgba(255,255,255,.25);
+}
+
+/* Make floating boxes pop a bit in dark mode */
+:root[data-mode="dark"] .btn-glass:hover,
+:root[data-mode="dark"] .accordion-header.btn-glass[aria-expanded="true"],
+:root[data-mode="dark"] .btn-glass.active {
+  background: rgba(255, 255, 255, 0.05);
+}

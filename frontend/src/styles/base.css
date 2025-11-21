@@ -1,0 +1,53 @@
+/* ==========================================================================
+   BASE / RESET + shared variables used by multiple layers
+   ========================================================================== */
+
+/* Accordion + scrollbar knobs live here so any file can read them */
+:root {
+  --accordion-speed: .22s; /* slower: .35s | faster: .12s */
+  --accordion-ease: cubic-bezier(.25,.8,.25,1);
+
+  /* Scrollbar theme knobs (design only) */
+  --scrollbar-width: 8px;
+  --scrollbar-radius: 999px;
+  --scrollbar-thumb-light: rgba(0, 0, 0, .15);
+  --scrollbar-thumb-light-hover: rgba(255, 255, 255, .3);
+  --scrollbar-thumb-dark: rgba(255, 255, 255, .1);
+  --scrollbar-thumb-dark-hover: rgba(255, 255, 255, .3);
+}
+
+/* Reset */
+* { box-sizing: border-box }
+html, body, #root {
+  height: 100%;
+  min-height: 100vh;
+  min-height: 100dvh;
+  width: 100%;
+  box-sizing: border-box;
+  overflow-x: hidden;
+}
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 14px/1.45 system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+}
+a { color: var(--primary); text-decoration: none }
+
+/* Icon tint + scrollbar color switching */
+:root[data-mode="dark"]  {
+  --icon-filter: none;
+  --scrollbar-thumb: var(--scrollbar-thumb-dark);
+  --scrollbar-thumb-hover: var(--scrollbar-thumb-dark-hover);
+}
+:root[data-mode="light"] {
+  --icon-filter: invert(.5) grayscale(1) brightness(.92) contrast(.85);
+  --scrollbar-thumb: var(--scrollbar-thumb-light);
+  --scrollbar-thumb-hover: var(--scrollbar-thumb-light-hover);
+}
+
+/* Make <img> + CSS background icons respect --icon-filter */
+img[src*="assets/icons/"] { filter: var(--icon-filter) !important; transition: filter .15s ease; }
+.icon-btn img { filter: var(--icon-filter) !important; }
+[class*="icon"][style*="assets/icons/"],
+button[class*="icon"] { filter: var(--icon-filter) !important; }

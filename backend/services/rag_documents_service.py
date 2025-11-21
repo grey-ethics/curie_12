@@ -1,7 +1,8 @@
 """
 - Handles admin RAG document upload and retrieval.
-- Now: real extraction, dedupe (exact + semantic), chunking, embeddings.
-- Stores file via data_storage_service.
+- Changes in this revision:
+  • Catch IntegrityError around DB insert to convert race-condition duplicates into HTTP 409.
+  • No changes to the dedupe logic: exact hash + optional semantic cosine check (threshold=0.75).
 """
 
 from __future__ import annotations
@@ -14,6 +15,7 @@ from typing import List
 
 from fastapi import UploadFile, HTTPException
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import IntegrityError  # NEW
 
 from services.data_storage_service import build_rag_document_path, save_bytes
 from crud.rag_documents import (
@@ -35,10 +37,9 @@ SEMANTIC_DUP_THRESHOLD = 0.75
 
 # -------------------- helpers --------------------
 
-
 def _normalize_text_for_hash(text: str) -> bytes:
+    # single-line comment: Lowercase + collapse whitespace → stable hash for “same text” regardless of spacing/case.
     import re
-
     norm = re.sub(r"\s+", " ", (text or "").lower()).strip()
     return norm.encode("utf-8", errors="ignore")
 
@@ -48,50 +49,34 @@ def _sha256_bytes(data: bytes) -> str:
 
 
 def _extract_text(filename: str, content_type: str | None, data: bytes) -> str:
-    """
-    Try PDF (2 libs), then docx, then plain text.
-    We keep all imports inside to avoid hard dependencies at import time.
-    """
+    # single-line comment: Try PyMuPDF, then pdfplumber, then docx, then raw decode.
     name = filename.lower()
-    # PDF
     if name.endswith(".pdf"):
-        # 1) try PyMuPDF
         try:
             import fitz  # type: ignore
-
             doc = fitz.open(stream=data, filetype="pdf")
             return "\n".join(page.get_text() or "" for page in doc)
         except Exception:
             pass
-        # 2) try pdfplumber
         try:
             import pdfplumber  # type: ignore
-
             with pdfplumber.open(BytesIO(data)) as pdf:
                 return "\n".join((p.extract_text() or "") for p in pdf.pages)
         except Exception:
             pass
-        # 3) fallback
         return data.decode(errors="ignore")
-
-    # DOCX
     if name.endswith(".docx"):
         try:
             from docx import Document  # type: ignore
-
             d = Document(BytesIO(data))
             return "\n".join(p.text for p in d.paragraphs)
         except Exception:
             return data.decode(errors="ignore")
-
-    # default: text-ish
     return data.decode(errors="ignore")
 
 
 def _split_text(text: str, max_chars: int = 1200) -> List[str]:
-    """
-    Simple splitter that respects line boundaries but caps chunk size.
-    """
+    # single-line comment: Greedy line-aware splitter capped at max_chars per chunk.
     out: List[str] = []
     buf: List[str] = []
     count = 0
@@ -107,13 +92,10 @@ def _split_text(text: str, max_chars: int = 1200) -> List[str]:
 
 
 def _embed_many(texts: List[str]) -> List[List[float]]:
-    """
-    Use our shared OpenAI client wrapper to embed many texts.
-    """
+    # single-line comment: Use shared OpenAI client wrapper to embed many texts.
     if not texts:
         return []
-    resp = openai_embed(input=texts)  # model picked in core.openai_client
-    # openai 1.x returns .data list with .embedding
+    resp = openai_embed(input=texts)
     return [d.embedding for d in resp.data]
 
 
@@ -142,16 +124,12 @@ def _compute_doc_embedding_from_chunks(chunk_vectors: List[List[float]]) -> List
 
 
 def _semantic_duplicate_check(db: Session, new_doc_vector: List[float]) -> tuple[int | None, float]:
-    """
-    Compare the new doc vector against ALL existing docs (or their chunk-averages).
-    Return (best_doc_id, score).
-    """
+    # single-line comment: Compare doc vector with all existing docs (or recomputed-from-chunks), return best match.
     best_id: int | None = None
     best_score = 0.0
     for d in list_all_rag_documents(db):
         dv = d.doc_embedding
         if dv is None:
-            # try to reconstruct from chunks
             chunk_vs = get_chunk_embeddings_by_doc(db, d.id)
             if not chunk_vs:
                 continue
@@ -166,39 +144,33 @@ def _semantic_duplicate_check(db: Session, new_doc_vector: List[float]) -> tuple
 
 # -------------------- public service functions --------------------
 
-
 def upload_rag_document(db: Session, *, uploader_account_id: int, upload: UploadFile) -> RagDocumentResponse:
     """
-    1. read data
-    2. extract text
-    3. dedupe (exact) by normalized text hash
-    4. chunk + embed
-    5. dedupe (semantic) by doc embedding
-    6. save file to disk
-    7. create doc + chunks in DB
+    - Pipeline:
+      1) read & extract text; 2) exact dedupe via normalized SHA-256; 3) chunk + embed;
+      4) semantic dedupe via cosine; 5) persist to disk; 6) insert doc; 7) insert chunks.
     """
     contents = upload.file.read()
-    # 1) extract text
+
     text = _extract_text(upload.filename, upload.content_type, contents)
     if not text.strip():
         raise HTTPException(status_code=400, detail="File could not be parsed into text")
 
-    # 2) exact-text dedupe
+    # exact-text dedupe
     text_hash = _sha256_bytes(_normalize_text_for_hash(text))
     existing = get_rag_document_by_hash(db, text_hash)
     if existing:
-        # we choose to *not* create a 2nd copy
         raise HTTPException(
             status_code=409,
             detail=f"Duplicate document detected (same text as doc id={existing.id})",
         )
 
-    # 3) chunk + embed chunks
+    # embed
     chunks_text = _split_text(text)
     chunk_vectors = _embed_many(chunks_text) if chunks_text else []
     doc_vector = _compute_doc_embedding_from_chunks(chunk_vectors) or []
 
-    # 4) semantic dedupe (only if we have a vector)
+    # semantic dedupe
     if doc_vector:
         match_id, score = _semantic_duplicate_check(db, doc_vector)
         if match_id is not None and score >= SEMANTIC_DUP_THRESHOLD:
@@ -207,23 +179,28 @@ def upload_rag_document(db: Session, *, uploader_account_id: int, upload: Upload
                 detail=f"Semantically similar document already exists (id={match_id}, similarity={score:.3f})",
             )
 
-    # 5) save file on disk
+    # file save
     path = build_rag_document_path(upload.filename)
     abs_path, _ = save_bytes(path, contents)
 
-    # 6) create doc
-    doc = create_rag_document(
-        db,
-        uploader_account_id=uploader_account_id,
-        filename=upload.filename,
-        content_type=upload.content_type,
-        file_path=abs_path,
-        file_size=len(contents),
-        content_sha256=text_hash,
-        doc_embedding=doc_vector if doc_vector else None,
-    )
+    # insert doc (catch race duplicates)
+    try:
+        doc = create_rag_document(
+            db,
+            uploader_account_id=uploader_account_id,
+            filename=upload.filename,
+            content_type=upload.content_type,
+            file_path=abs_path,
+            file_size=len(contents),
+            content_sha256=text_hash,
+            doc_embedding=doc_vector if doc_vector else None,
+        )
+    except IntegrityError:
+        db.rollback()
+        # Another request inserted the same content hash after our pre-check.
+        raise HTTPException(status_code=409, detail="Duplicate document detected (same text hash)")
 
-    # 7) create chunks
+    # insert chunks
     for idx, (chunk_text, vec) in enumerate(zip(chunks_text, chunk_vectors)):
         create_rag_chunk(
             db,
@@ -243,8 +220,8 @@ def upload_rag_document(db: Session, *, uploader_account_id: int, upload: Upload
     )
 
 
-# list docs for admin (we just list all for now)
 def list_rag_documents_for_admin(db: Session, admin_account_id: int):
+    # single-line comment: Currently returns all docs; filter by account if needed later.
     docs = list_rag_documents(db, uploader_account_id=None)
     return [
         RagDocumentResponse(

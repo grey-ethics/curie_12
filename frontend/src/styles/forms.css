@@ -1,0 +1,240 @@
+/* ==========================================================================
+   FORMS (generic + auth + file input + selected-file chips + RAG upload row)
+   ========================================================================== */
+
+/* Generic inputs/selects inside cards */
+.card input,
+.card select {
+  padding: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  border-radius: 6px;
+  backdrop-filter: blur(var(--glass-blur)); -webkit-backdrop-filter: blur(var(--glass-blur));
+}
+
+/* Pointer cursor for the native file input (button + text area) */
+.card input[type="file"] { cursor: var(--cur-pointer, pointer), pointer; }
+.card input[type="file"]::file-selector-button { cursor: var(--cur-pointer, pointer), pointer; }
+.card input[type="file"]::-webkit-file-upload-button { cursor: var(--cur-pointer, pointer), pointer; }
+
+/* Generic select look used in multiple places */
+.select-like {
+  padding: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  border-radius: 6px;
+  cursor: var(--cur-pointer, pointer), pointer;
+  backdrop-filter: blur(var(--glass-blur)); -webkit-backdrop-filter: blur(var(--glass-blur));
+  min-width: 160px;
+}
+
+/* Buttons in cards — baseline look (table-style) */
+.card button {
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  border-radius: 8px;
+  cursor: var(--cur-pointer, pointer), pointer;
+}
+
+/* ---------------- Upload header (4-part) ---------------- */
+/* ≈20/40/20/20 while staying inside the card content width */
+.upload4-grid {
+  display: grid;
+  grid-template-columns:
+    minmax(140px, 1fr)   /* left button */
+    minmax(300px, 2fr)   /* files list */
+    minmax(200px, 1fr)   /* stats + clear */
+    minmax(140px, 1fr);  /* right button */
+  gap: 12px;
+  align-items: stretch; /* all cells equal height (match tallest) */
+}
+
+/* each cell stacks main content; no helper notes under buttons */
+.upload4-grid .pane {
+  display: grid;
+  grid-auto-rows: 1fr;
+  gap: 8px;
+  min-width: 0; /* prevent overflow from long filenames */
+}
+
+/* ===== Unified button design (Design E) for BOTH buttons — identical always ===== */
+.upload4-grid .btn-fill{
+  height:100%; width:100%;
+  display:flex; align-items:center; justify-content:center;
+  padding-inline: 12px;
+  border:1.5px solid transparent;        /* gradient border via background-clip */
+  background:
+    linear-gradient(var(--bg), var(--bg)) padding-box,
+    linear-gradient(135deg,
+      color-mix(in srgb, var(--text) 18%, transparent),
+      color-mix(in srgb, var(--border) 100%, transparent)) border-box;
+  color: var(--text);
+  border-radius: 12px;
+  backdrop-filter: blur(var(--glass-blur)); -webkit-backdrop-filter: blur(var(--glass-blur));
+  box-shadow: 0 8px 20px color-mix(in srgb, var(--text) 8%, transparent);
+  transition: box-shadow .2s ease, transform .05s ease, filter .15s ease;
+  font-weight:450;
+}
+.upload4-grid .btn-fill:hover{
+  filter: brightness(1.02);
+  box-shadow: 0 12px 28px color-mix(in srgb, var(--text) 12%, transparent);
+}
+.upload4-grid .btn-fill:active{ transform: translateY(1px); }
+
+/* Keep interaction disabled but don't change the visual design */
+.upload4-grid .btn-fill[disabled]{
+  opacity: 1;                  /* no dimming */
+  cursor: not-allowed;
+}
+
+/* files box height is fixed; card never stretches with many files */
+.upload4-grid .files-box {
+  height: 140px;     /* controls the overall row height */
+  max-height: 140px;
+}
+
+/* themed vertical scrollbar (uses global .scroll-y look) */
+.upload4-grid .files-box.scroll-y { overflow: auto; }
+
+/* -------- RIGHT COLUMN (stats top + clear bottom) -------- */
+/* Make the two tiles equal height (50/50) */
+.pane.stats { 
+  grid-template-rows: 1fr 1fr;   /* <— changed from grid-auto-rows */
+}
+
+/* existing tile look */
+.upload-slab {
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  border-radius: 8px;
+  padding: 10px;
+}
+
+/* Let the Clear-all button fill its tile (size only, no visual change) */
+.pane.stats > .upload-slab:last-child { display: flex; }
+.pane.stats > .upload-slab:last-child > button {
+  height: 100%;
+  width: 100%;
+}
+
+/* Stats content */
+/* 1) push both KPIs a bit to the right */
+.stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  align-items: center;
+  padding-left: 75px;   /* NEW: nudge content to the right */
+}
+/* 2) reduce boldness of the KPI numbers */
+.kpi { display: grid; align-content: center; justify-items: start; gap: 2px; }
+.kpi strong { font-size: 16px; font-weight: 500; } /* NEW: lighter than default <strong> */
+.kpi span { font-size: 12px; opacity: .75; }
+
+/* ----- Files list: row style ----- */
+.upload-list ul { list-style: none; padding: 0; margin: 0; display: grid; gap: 4px; }
+.upload-list-empty { opacity: .7; font-size: 13px; }
+.upload-list li {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: center;
+  gap: 8px;
+  border: 1px dashed var(--border);
+  border-radius: 6px;
+  padding: 6px 8px;
+  background: color-mix(in srgb, var(--bg) 92%, transparent);
+}
+.upload-list .name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.upload-list .size { font-size: 12px; opacity: .75; }
+.upload-list .remove {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0 8px;
+  line-height: 1.4;
+  font-weight: 700;
+  cursor: var(--cur-pointer, pointer), pointer;
+}
+
+/* Responsive: stack on narrow screens */
+@media (max-width: 1100px) {
+  .upload4-grid { grid-template-columns: 1fr; }
+  .upload4-grid .files-box { height: 200px; max-height: 200px; }
+}
+
+/* ---------------- (legacy chips, kept if needed elsewhere) ---------------- */
+.selected-files {
+  display: flex; flex-wrap: wrap; gap: 6px;
+  padding: 0; margin: 4px 0 0 0; list-style: none;
+}
+.selected-files li {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 6px 8px; border: 1px solid var(--border);
+  background: var(--bg); color: var(--text); border-radius: 8px;
+}
+.selected-files .name {
+  max-width: 44ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.selected-files .size { font-size: 12px; opacity: .7; }
+.selected-files .chip-remove {
+  background: none; border: none; cursor: var(--cur-pointer, pointer), pointer;
+  padding: 0 4px; line-height: 1; font-weight: 700;
+}
+.selected-files .chip-clear {
+  background: none; border: 1px dashed var(--border);
+  cursor: var(--cur-pointer, pointer), pointer;
+  padding: 4px 8px; border-radius: 8px; font-size: 12px;
+}
+
+/* ===== Auth layout (kept) ===== */
+.auth .card { display: grid; gap: 8px; max-width: 420px; }
+.auth .card .select-like { width: 100%; }
+
+.auth-page {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding-top: 48px;
+  min-height: 60vh;
+}
+
+.auth-frame {
+  width: min(420px, 92vw);
+  display: grid;
+  gap: 10px;
+  justify-items: stretch;
+}
+
+.auth-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+.auth-tab {
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  border-radius: 10px;
+  cursor: var(--cur-pointer, pointer), pointer;
+  text-align: center;
+}
+
+.auth-tab.active { background: var(--card); font-weight: 600; }
+
+.auth-card { width: 100%; }
+.auth-card .field { display: grid; gap: 6px; margin-bottom: 12px; }
+.auth-card .select-like { width: 100%; text-align: left; }
+
+.auth-card .form-actions {
+  display: flex;
+  justify-content: center;
+  margin-top: 0;
+  padding-top: 20px;
+  padding-bottom: 15px;
+}
+
+.auth-card .form-actions > button { width: 100%; }
+.auth-card button { padding: 10px 12px; border-radius: 8px; }

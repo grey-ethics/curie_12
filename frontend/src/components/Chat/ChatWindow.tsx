@@ -1,13 +1,10 @@
 /*
-- Renders pending tool invocations as inline widgets.
-
-- What changed in this revision:
-  • Added an explicit Cancel button to BOTH inline widgets (Resume Match, Document Generation).
-    It calls POST /chat/sessions/{sid}/tools/{invId}/cancel and reloads the thread.
-  • Kept auto-close behavior on “continue chatting”: server already cancels on next user turn.
-  • No visual changes to completed/cancelled badges; pending widgets simply disappear after cancel.
+- Chat bubbles redesigned:
+  • Right-aligned user bubbles, left-aligned assistant bubbles.
+  • Glass/3D look with rounded rectangles, soft shadow, subtle inner highlight.
+  • Width never stretches edge-to-edge; bubbles size to content with a max width.
+- Widgets unchanged functionally; explicit Cancel stays.
 */
-
 import { useMemo, useState } from 'react'
 import type { ChatMessage, ChatFile, ChatToolInvocation } from '../../api/types'
 import * as chat from '../../api/chat'
@@ -25,44 +22,39 @@ export default function ChatWindow({
     <div className="chat-window scroll-y">
       {messages.map((m) => {
         const isUser = m.role === 'user'
-        const label = isUser ? 'user:' : 'assistant:'
         const inv = m.tool_invocation
-
-        const contentToShow = useMemo(() => {
-          return isUser ? stripScaffold(m.content) : m.content
-        }, [isUser, m.content])
+        const contentToShow = useMemo(
+          () => (isUser ? stripScaffold(m.content) : m.content),
+          [isUser, m.content],
+        )
 
         return (
           <div
             key={m.id}
-            className={`chat-bubble ${isUser ? 'user' : 'assistant'}`}
-            style={{
-              border: '1px solid var(--border, rgba(0,0,0,0.12))',
-              borderRadius: 10,
-              padding: 10,
-              margin: '10px 0',
-              background: isUser ? 'rgba(0,0,0,0.02)' : 'rgba(0,0,0,0.04)',
-              whiteSpace: 'pre-wrap',
-              wordBreak: 'break-word',
-            }}
+            className={`bubble-row ${isUser ? 'right' : 'left'}`}
           >
-            <span style={{ fontWeight: 600, marginRight: 6 }}>{label}</span>
-            {contentToShow}
+            <div className={`bubble ${isUser ? 'user' : 'assistant'}`}>
+              <div className="bubble-content">{contentToShow}</div>
 
-            {m.files && m.files.length > 0 && <FilesList files={m.files} />}
+              {m.files && m.files.length > 0 && <FilesList files={m.files} />}
 
-            {sessionId && inv && inv.status === 'pending' && (
-              <div style={{ marginTop: 12 }}>
-                <WidgetRenderer sessionId={sessionId} invocation={inv} onDone={onUpdated} />
-              </div>
-            )}
+              {sessionId && inv && inv.status === 'pending' && (
+                <div className="bubble-widget">
+                  <WidgetRenderer
+                    sessionId={sessionId}
+                    invocation={inv}
+                    onDone={onUpdated}
+                  />
+                </div>
+              )}
 
-            {inv && inv.status === 'completed' && (
-              <div style={{ marginTop: 8, fontSize: 12, opacity: 0.75 }}>Widget completed.</div>
-            )}
-            {inv && inv.status === 'cancelled' && (
-              <div style={{ marginTop: 8, fontSize: 12, opacity: 0.75 }}>Widget cancelled.</div>
-            )}
+              {inv && inv.status === 'completed' && (
+                <div className="bubble-meta">Widget completed.</div>
+              )}
+              {inv && inv.status === 'cancelled' && (
+                <div className="bubble-meta">Widget cancelled.</div>
+              )}
+            </div>
           </div>
         )
       })}
@@ -70,9 +62,12 @@ export default function ChatWindow({
   )
 }
 
-// single-line comment: Remove helper lines we inject for context/answer-style before rendering user text.
+// single-line comment: Remove helper scaffold lines from user text before rendering.
 function stripScaffold(text: string): string {
-  const lines = (text || '').split(/\r?\n/).map((s) => s.trim()).filter(Boolean)
+  const lines = (text || '')
+    .split(/\r?\n/)
+    .map((s) => s.trim())
+    .filter(Boolean)
   const dropStartsWith = [
     'Use the uploaded company documents as primary context when answering.',
     'Answer using your general knowledge.',
@@ -80,51 +75,27 @@ function stripScaffold(text: string): string {
     'Provide a detailed, step-by-step explanation',
     'Provide a detailed, step-by-step explanation with any important caveats',
   ]
-  const filtered = lines.filter((ln) => !dropStartsWith.some((p) => ln.startsWith(p)))
+  const filtered = lines.filter(
+    (ln) => !dropStartsWith.some((p) => ln.startsWith(p)),
+  )
   return filtered.join('\n')
 }
 
 function FilesList({ files }: { files: ChatFile[] }) {
   return (
-    <div
-      style={{
-        marginTop: 10,
-        borderTop: '1px solid rgba(0,0,0,0.05)',
-        paddingTop: 8,
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 4,
-      }}
-    >
-      <span style={{ fontSize: 12, opacity: 0.75 }}>Files ({files.length}):</span>
+    <div className="files-list">
+      <span className="files-title">Files ({files.length}):</span>
       {files.map((f: ChatFile) => (
         <a
           key={f.id}
           href={f.web_path || '#'}
-          style={{
-            fontSize: 13,
-            textDecoration: 'underline',
-            display: 'inline-flex',
-            gap: 6,
-            alignItems: 'center',
-            color: 'var(--link, #1677ff)',
-          }}
+          className="file-link"
           target="_blank"
           rel="noreferrer"
         >
-          <span
-            style={{
-              fontSize: 10,
-              textTransform: 'uppercase',
-              background: f.file_kind === 'input' ? 'rgba(0, 128, 0, 0.12)' : 'rgba(0, 0, 128, 0.12)',
-              borderRadius: 4,
-              padding: '1px 4px',
-            }}
-          >
-            {f.file_kind}
-          </span>
+          <span className={`file-badge ${f.file_kind}`}>{f.file_kind}</span>
           <span>{f.original_filename}</span>
-          <span style={{ opacity: 0.6, fontSize: 11 }}>{formatBytes(f.file_size)}</span>
+          <span className="file-size">{formatBytes(f.file_size)}</span>
         </a>
       ))}
     </div>
@@ -146,7 +117,7 @@ function WidgetRenderer({
   if (invocation.tool_type === 'doc_gen') {
     return <DocGenForm sessionId={sessionId} invId={invocation.id} onDone={onDone} />
   }
-  return <div style={{ fontSize: 12, opacity: 0.8 }}>Unknown widget: {invocation.tool_type}</div>
+  return <div className="bubble-meta">Unknown widget: {invocation.tool_type}</div>
 }
 
 // single-line comment: Inline Resume Match form with explicit Cancel.
@@ -171,9 +142,7 @@ function ResumeMatchForm({
     }
     const form = new FormData()
     if (jd.trim()) form.append('job_description', jd.trim())
-    if (hasFiles) {
-      Array.from(files!).forEach((f) => form.append('files', f, f.name))
-    }
+    if (hasFiles) Array.from(files!).forEach((f) => form.append('files', f, f.name))
     setBusy(true)
     try {
       await chat.runResumeMatchWidgetUpload(sessionId, invId, form)
@@ -199,38 +168,27 @@ function ResumeMatchForm({
   }
 
   return (
-    <div
-      style={{
-        marginTop: 8,
-        padding: 10,
-        borderRadius: 8,
-        border: '1px dashed rgba(0,0,0,0.2)',
-        background: 'rgba(255,255,255,0.6)',
-        display: 'grid',
-        gap: 8,
-      }}
-    >
+    <div className="widget-card">
       <b>Resume Match</b>
-      <label style={{ fontSize: 12, opacity: 0.8 }}>Job Description</label>
+      <label className="widget-label">Job Description</label>
       <textarea
         value={jd}
         onChange={(e) => setJd(e.target.value)}
         rows={5}
         placeholder="Paste the job description… (or include a JD file among your uploads)"
-        style={{ width: '100%' }}
       />
-      <label style={{ fontSize: 12, opacity: 0.8 }}>Resume files</label>
+      <label className="widget-label">Resume files</label>
       <input
         type="file"
         multiple
         accept=".pdf,.doc,.docx,.txt"
         onChange={(e) => setFiles(e.target.files)}
       />
-      <div style={{ display: 'flex', gap: 8 }}>
+      <div className="widget-actions">
         <button type="button" onClick={run} disabled={busy}>
           {busy ? 'Running…' : 'Run Resume Match'}
         </button>
-        <button type="button" onClick={cancel} disabled={busy} style={{ opacity: 0.85 }}>
+        <button type="button" onClick={cancel} disabled={busy} className="btn-secondary">
           Cancel
         </button>
       </div>
@@ -289,39 +247,27 @@ function DocGenForm({
   }
 
   return (
-    <div
-      style={{
-        marginTop: 8,
-        padding: 10,
-        borderRadius: 8,
-        border: '1px dashed rgba(0,0,0,0.2)',
-        background: 'rgba(255,255,255,0.6)',
-        display: 'grid',
-        gap: 8,
-      }}
-    >
+    <div className="widget-card">
       <b>Document Generation</b>
-      <label style={{ fontSize: 12, opacity: 0.8 }}>Template</label>
+      <label className="widget-label">Template</label>
       <textarea
         value={template}
         onChange={(e) => setTemplate(e.target.value)}
         rows={5}
         placeholder="Type or paste a template. Use {{var}} placeholders if desired."
-        style={{ width: '100%' }}
       />
-      <label style={{ fontSize: 12, opacity: 0.8 }}>Variables (JSON)</label>
+      <label className="widget-label">Variables (JSON)</label>
       <textarea
         value={varsText}
         onChange={(e) => setVarsText(e.target.value)}
         rows={5}
         placeholder='{"name":"Alice","date":"2025-01-01"}'
-        style={{ width: '100%' }}
       />
-      <div style={{ display: 'flex', gap: 8 }}>
+      <div className="widget-actions">
         <button type="button" onClick={run} disabled={busy}>
           {busy ? 'Generating…' : 'Generate Document'}
         </button>
-        <button type="button" onClick={cancel} disabled={busy} style={{ opacity: 0.85 }}>
+        <button type="button" onClick={cancel} disabled={busy} className="btn-secondary">
           Cancel
         </button>
       </div>

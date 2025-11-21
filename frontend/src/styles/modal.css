@@ -1,0 +1,30 @@
+/* ==========================================================================
+   MODAL & SETTINGS
+   ========================================================================== */
+.modal-backdrop {
+  position: absolute; inset: 0;
+  background: rgba(0,0,0,.35);
+  backdrop-filter: blur(2px);
+  display: flex; align-items: center; justify-content: center; z-index: 20
+}
+.modal {
+  width: 640px; max-width: 95vw;
+  background: var(--bg); border: 1px solid var(--border); border-radius: 12px;
+  backdrop-filter: blur(var(--glass-blur)); -webkit-backdrop-filter: blur(var(--glass-blur));
+}
+.modal-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px; border-bottom: 1px solid var(--border)
+}
+.modal-body { padding: 12px }
+
+/* Settings form rows */
+.settings .row {
+  display: grid; grid-template-columns: 120px 1fr auto;
+  gap: 8px; align-items: center; margin: 10px 0
+}
+.settings input {
+  padding: 8px; border: 1px solid var(--border);
+  background: var(--bg); color: var(--text); border-radius: 6px;
+  backdrop-filter: blur(var(--glass-blur)); -webkit-backdrop-filter: blur(var(--glass-blur));
+}

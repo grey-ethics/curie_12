@@ -1,0 +1,25 @@
+/* ==========================================================================
+   DROPDOWNS (menus & portals)
+   ========================================================================== */
+.dropdown { position: relative }
+.dropdown-menu {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0,0,0,.15);
+  padding: 6px;
+  backdrop-filter: blur(var(--glass-blur)); -webkit-backdrop-filter: blur(var(--glass-blur));
+}
+/* Default anchor for inline menus (header Options menu, etc.) */
+.dropdown > .dropdown-menu { position: absolute; right: 0; top: calc(100% + 6px); min-width: 220px; }
+.dropdown-menu button {
+  display: block; width: 100%; text-align: left;
+  background: none; border: none; padding: 8px 10px; color: var(--text); cursor: pointer
+}
+.dropdown-menu .sep { height: 1px; background: var(--border); margin: 6px 0 }
+.dropdown-menu .section-divider {
+  height: 1px; margin: 6px 10px;
+  background: linear-gradient(90deg, transparent, var(--border), transparent);
+  border-radius: 2px; opacity: .9;
+}
+.dropdown .menu-row { display: flex; align-items: center; justify-content: space-between; padding: 6px 8px }

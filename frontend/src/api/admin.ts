@@ -1,26 +1,36 @@
 /*
 - file: src/api/admin.ts
-- purpose: admin-facing RAG document API that matches backend /admin/rag-documents/* routes
-- notes: backend takes ONE UploadFile per request; we loop client-side for multi-upload
+- purpose: admin-facing RAG document API with resilient per-file upload results (success or error).
+- Changes in this revision:
+  • Clean up error messages by stripping the "METHOD URL:" prefix so the UI shows only the backend reason.
 */
+
 import { http } from './http'
 
-// uploadDocuments: POST /admin/rag-documents/ (one file per request)
-export async function uploadDocuments(files: File[]) {
-  const results: any[] = []
+export type UploadOk = { ok: true; data: any }
+export type UploadErr = { ok: false; filename: string; error: string }
+export type UploadResult = UploadOk | UploadErr
+
+// single-line comment: POST one file per request; never throw overall—collect results.
+export async function uploadDocuments(files: File[]): Promise<{ items: UploadResult[] }> {
+  const items: UploadResult[] = []
   for (const f of files) {
     const fd = new FormData()
     fd.append('file', f)
-    // backend route from the snapshot: /admin/rag-documents/
-    // returns a RagDocumentResponse
-    // eslint-disable-next-line no-await-in-loop
-    const res = await http.postForm('/admin/rag-documents/', fd)
-    results.push(res)
+    try {
+      // eslint-disable-next-line no-await-in-loop
+      const res = await http.postForm('/admin/rag-documents/', fd)
+      items.push({ ok: true, data: res })
+    } catch (e: any) {
+      const raw = e?.message || 'Upload failed'
+      const msg = String(raw).replace(/^[A-Z]+?\s+\S+?:\s*/i, '').trim() // strip "POST /path: "
+      items.push({ ok: false, filename: f.name, error: msg })
+    }
   }
-  return { items: results }
+  return { items }
 }
 
-// listDocuments: GET /admin/rag-documents/
+// single-line comment: GET /admin/rag-documents/
 export async function listDocuments() {
   return http.get('/admin/rag-documents/').catch(() => ({ items: [] }))
 }
@@ -31,7 +41,7 @@ function getCookie(name: string) {
   return m ? m.pop() : ''
 }
 
-// helper: auth headers
+// helper: auth headers (used by download)
 function authHeaders(includeJson = false) {
   const t = localStorage.getItem('access_token') || ''
   const h: Record<string, string> = {}
@@ -42,20 +52,16 @@ function authHeaders(includeJson = false) {
   return h
 }
 
-// downloadDocument: GET meta /admin/rag-documents/{id} -> then fetch /static/<file_path>
+// single-line comment: GET /admin/rag-documents/{id} then stream from /static/<relative path>
 export async function downloadDocument(
   documentId: number
 ): Promise<{ blob: Blob; filename: string }> {
-  // 1) get metadata
   const meta = await http.get(`/admin/rag-documents/${documentId}`)
   const filePath: string | null = meta?.file_path || null
   const filename: string = meta?.filename || `document-${documentId}`
 
-  if (!filePath) {
-    throw new Error('No file_path available for this document')
-  }
+  if (!filePath) throw new Error('No file_path available for this document')
 
-  // backend likely serves these under /static/…
   const normalized = filePath.startsWith('/static/')
     ? filePath
     : `/static/${filePath.replace(/^\/+/, '')}`
@@ -65,14 +71,12 @@ export async function downloadDocument(
     headers: authHeaders(false),
     credentials: 'include',
   })
-  if (!res.ok) {
-    throw new Error(`HTTP ${res.status}`)
-  }
+  if (!res.ok) throw new Error(`HTTP ${res.status}`)
   const blob = await res.blob()
   return { blob, filename }
 }
 
-// deleteDocument: DELETE /admin/rag-documents/{id}
+// single-line comment: DELETE /admin/rag-documents/{id}
 export async function deleteDocument(documentId: number) {
   return http.del(`/admin/rag-documents/${documentId}`)
 }
