@@ -1,3 +1,10 @@
+/*
+- file: src/state/nav.ts
+- purpose: Navigation definitions for user/admin sidebars.
+- change: Admin nav label renamed from "Upload & Documents" to "Rag Documents".
+- behavior: No path or structure changes.
+*/
+
 export type NavItem = {
   id: string
   label: string
@@ -15,7 +22,7 @@ export const ADMIN_NAV: NavItem[] = [
     label: 'Admin Options',
     path: '/admin/admin',
     children: [
-      { id: 'uploads', label: 'Upload & Documents', path: '/admin/admin' },
+      { id: 'uploads', label: 'Rag Documents', path: '/admin/admin' },
     ],
   },
   { id: 'user', label: 'User Options', path: '/admin/user' },

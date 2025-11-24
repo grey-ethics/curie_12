@@ -1,11 +1,17 @@
-// src/app/routes.tsx
+/*
+- file: src/app/routes.tsx
+- purpose: App-level route definitions for public, user, admin, and super-admin areas.
+- change: Updated admin documents page import to new ragdocuments.tsx filename.
+- behavior: No routing paths changed.
+*/
+
 import { Routes, Route, Navigate } from 'react-router-dom'
 import PublicLayout from '../layouts/PublicLayout'
 import PortalLayout from '../layouts/PortalLayout'
 import LandingPage from '../pages/LandingPage'
 import SignInPage from '../pages/SignInPage'
 import SignUpPage from '../pages/SignUpPage'
-import UploadAndDocumentsPage from '../pages/admin/UploadAndDocumentsPage'
+import RagDocumentsPage from '../pages/admin/RagDocuments'
 import SuperAdminAdminsPage from '../pages/superadmin/SuperAdminAdminsPage'
 import SuperAdminUsersPage from '../pages/superadmin/SuperAdminUsersPage'
 import SuperAdminLoginPage from '../pages/SuperAdminLoginPage'
@@ -13,6 +19,7 @@ import { useAuth } from '../state/auth'
 import UserChatPage from '../pages/user/UserChatMain'
 import AdminUserChatMain from '../pages/admin/AdminUserChatMain'
 
+// single-line comment: Central routing switch based on actor role.
 export default function RoutesView() {
   const { actor } = useAuth()
 
@@ -64,7 +71,7 @@ export default function RoutesView() {
           path="/admin/admin"
           element={
             actor === 'admin' ? (
-              <UploadAndDocumentsPage />
+              <RagDocumentsPage />
             ) : (
               <Navigate to="/signin" />
             )

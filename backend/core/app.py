@@ -3,7 +3,7 @@
 - Installs CORS, error handlers, static mount.
 - Includes all routers (auth, profile, chat, super-admin, admin RAG, tools*).
 - Performs DB + OpenAI startup checks.
-- ✅ Now mounts /static using services.data_storage_service.get_storage_root() so storage is defined in ONE place.
+- Starts PMS goal-polling thread if PMS_MONGO_URI is set (notifications POC).
 """
 
 import logging
@@ -25,6 +25,9 @@ from api.accounts import router as accounts_router
 from api.rag_documents import router as rag_router
 from api.chat import router as chat_router
 from api.tools import router as tools_router
+from api.notifications import router as notifications_router  # NEW
+
+from services.pms_poll_service import start_pms_goal_poller  # NEW
 
 log = logging.getLogger("uvicorn.error")
 
@@ -45,6 +48,7 @@ def _startup_db_check() -> None:
             "chat_tool_invocations",
             "rag_documents",
             "rag_document_chunks",
+            "notifications",  # NEW
         }
         missing = required - tables
         if missing:
@@ -79,6 +83,7 @@ def create_app() -> FastAPI:
     app.include_router(chat_router, prefix="/chat", tags=["chat"])
     app.include_router(accounts_router, prefix="/super-admin/accounts", tags=["super-admin"])
     app.include_router(rag_router, prefix="/admin/rag-documents", tags=["admin-rag"])
+    app.include_router(notifications_router, prefix="/notifications", tags=["notifications"])  # NEW
 
     # tools are optional
     if settings.EXPOSE_TOOLS_HTTP:
@@ -93,5 +98,9 @@ def create_app() -> FastAPI:
     async def _startup():
         _startup_db_check()
         _startup_openai_check()
+
+        # start PMS poller only if configured
+        if settings.PMS_MONGO_URI:
+            start_pms_goal_poller()
 
     return app

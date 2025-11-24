@@ -1,8 +1,7 @@
 """
 - Centralized FastAPI settings using pydantic-settings.
-- ✅ Now has ONE clear storage setting: STORAGE_ROOT (default: "storage").
-- ✅ Keeps DOCUMENTS_DIR only for backward compatibility with older env files.
-- Defaults still include localhost AND 127.0.0.1 dev ports for CORS.
+- Adds PMS Mongo settings for the goal-notification POC (URI, DB name, poll interval).
+- Keeps all existing settings unchanged and backward compatible.
 """
 
 from typing import List, Optional, Union
@@ -36,9 +35,7 @@ class Settings(BaseSettings):
     CHAT_MODEL: str = "gpt-4o-mini"
 
     # --- Storage (NEW) ---
-    # prefer this:
     STORAGE_ROOT: str = "storage"
-    # keep this only so existing .env with DOCUMENTS_DIR won't crash; we won't use it anywhere new
     DOCUMENTS_DIR: Optional[str] = None
 
     # broadened CORS for local dev
@@ -51,6 +48,11 @@ class Settings(BaseSettings):
 
     # --- Feature flags ---
     EXPOSE_TOOLS_HTTP: bool = False
+
+    # --- PMS Mongo (for notifications POC) ---
+    PMS_MONGO_URI: Optional[str] = None
+    PMS_DB_NAME: str = "pms_dummy"
+    PMS_POLL_INTERVAL_SECONDS: int = 60
 
     class Config:
         env_file = ".env"
