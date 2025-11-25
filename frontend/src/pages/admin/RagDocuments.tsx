@@ -1,10 +1,13 @@
 /*
-- file: src/pages/admin/UploadAndDocumentsPage.tsx
-- changes:
-  • Merge “Upload files for RAG” and “Output” into one card.
-  • Add an in-card divider separating upload UI from output log.
-  • Reduce only the output log box height via a modifier class (does not affect selected-files box).
-  • Keep all existing upload/list/download/delete behaviors unchanged.
+- file: src/pages/admin/RagDocuments.tsx
+- purpose:
+  - Admin page to upload RAG docs, show per-file results, and manage existing documents.
+  - Layout:
+      • Top Upload card auto-sizes.
+      • Bottom Documents card fills remaining portal height.
+      • Documents card contains an inner panel (documents-inner) that frames the table.
+      • Table itself scrolls vertically/horizontally inside that inner panel.
+  - All upload/list/download/delete logic is preserved.
 */
 
 import { useEffect, useRef, useState } from 'react'
@@ -27,8 +30,10 @@ export default function UploadAndDocumentsPage() {
   const [rows, setRows] = useState<any[]>([])
   const fileInputRef = useRef<HTMLInputElement | null>(null)
 
+  // single-line comment: Format byte size to human-readable string for summaries.
   const formatSize = (n?: number) => (typeof n === 'number' ? fmtBytes(n) : '-')
 
+  // single-line comment: Build the success summary line for a single uploaded document.
   const summarizeOk = (res: any) => {
     const id = res?.id ?? '-'
     const name = res?.filename ?? '(unnamed)'
@@ -37,6 +42,7 @@ export default function UploadAndDocumentsPage() {
     return `✔ Uploaded "${name}" • ${type} • ${size} • id: ${id}`
   }
 
+  // single-line comment: Convert an UploadResult into a single log line.
   const summarize = (r: UploadResult): string => {
     if ((r as any)?.ok === true) return summarizeOk((r as any).data)
     const err = r as any
@@ -45,6 +51,7 @@ export default function UploadAndDocumentsPage() {
     return `× Skipped "${name}" • ${reason}`
   }
 
+  // single-line comment: Fetch current documents list for this admin.
   const load = async () => {
     const data = await listDocuments()
     setRows(data.items || data || [])
@@ -52,6 +59,7 @@ export default function UploadAndDocumentsPage() {
 
   useEffect(() => { void load() }, [])
 
+  // single-line comment: Merge newly selected files into the current selection (deduped).
   const onFilesSelected = (e: React.ChangeEvent<HTMLInputElement>) => {
     const incoming = Array.from(e.target.files || [])
     if (incoming.length === 0) return
@@ -62,23 +70,27 @@ export default function UploadAndDocumentsPage() {
       for (const f of incoming) map.set(key(f), f)
       return Array.from(map.values())
     })
-    e.currentTarget.value = '' // allow re-picking the same file(s)
+    e.currentTarget.value = ''
   }
 
+  // single-line comment: Remove the selected file at a given index.
   const removeFileAt = (idx: number) =>
     setSelected(prev => prev.filter((_, i) => i !== idx))
 
+  // single-line comment: Clear all selected files.
   const clearAll = () => setSelected([])
 
+  // single-line comment: Upload all selected files, append results to log, then refresh list.
   const onUpload = async () => {
     if (selected.length === 0) return
     const res = await uploadDocuments(selected)
     const lines = Array.isArray(res?.items) ? res.items.map(summarize) : ['× Unexpected response']
-    setLog(l => [...lines, ...l]) // newest first
+    setLog(l => [...lines, ...l])
     setSelected([])
     await load()
   }
 
+  // single-line comment: Download a document by id and trigger browser save.
   const onDownloadDoc = async (id: number) => {
     try {
       const { blob, filename } = await downloadDocument(id)
@@ -95,6 +107,7 @@ export default function UploadAndDocumentsPage() {
     }
   }
 
+  // single-line comment: Delete a document by id after confirmation, then refresh list.
   const onDeleteDoc = async (id: number) => {
     const ok = window.confirm('Delete this document from RAG?')
     if (!ok) return
@@ -109,14 +122,12 @@ export default function UploadAndDocumentsPage() {
   const totalBytes = selected.reduce((n, f) => n + (f?.size || 0), 0)
 
   return (
-    <section className="container">
+    <section className="container rag-documents-page">
       {/* ===== Combined Upload + Output card ===== */}
       <div className="card">
-        <h3>Upload files for RAG</h3>
+        <h3 className="rag-card-title">Upload files for RAG</h3>
 
-        {/* Upload header (4 parts) */}
         <div className="upload4-grid">
-          {/* 1) Select Files — real button triggers hidden input */}
           <div className="pane">
             <button
               type="button"
@@ -139,7 +150,6 @@ export default function UploadAndDocumentsPage() {
             />
           </div>
 
-          {/* 2) Selected files list (themed scrollbar) */}
           <div className="pane">
             <div className="files-box text-output upload-list scroll-y" aria-label="Selected files">
               {selected.length === 0 ? (
@@ -166,7 +176,6 @@ export default function UploadAndDocumentsPage() {
             </div>
           </div>
 
-          {/* 3) Stats + Clear (equal height halves) */}
           <div className="pane stats">
             <div className="upload-slab">
               <div className="stats-grid">
@@ -194,7 +203,6 @@ export default function UploadAndDocumentsPage() {
             </button>
           </div>
 
-          {/* 4) Upload Files */}
           <div className="pane">
             <button
               type="button"
@@ -210,10 +218,7 @@ export default function UploadAndDocumentsPage() {
           </div>
         </div>
 
-        {/* Divider between sections */}
         <hr className="card-divider" />
-
-        {/* Output log */}
 
         <div
           className="text-output text-output--log scroll-y"
@@ -234,14 +239,18 @@ export default function UploadAndDocumentsPage() {
         </div>
       </div>
 
-      {/* ===== Documents table ===== */}
-      <div className="card">
-        <h3>Documents</h3>
-        <DocumentsTable
-          rows={rows}
-          onDownload={onDownloadDoc}
-          onDelete={onDeleteDoc}
-        />
+      {/* ===== Documents table (fills remaining height) ===== */}
+      <div className="card documents-card">
+        <h3 className="rag-card-title">Uploaded files for RAG</h3>
+
+        {/* single-line comment: Inner panel to frame the table (like Upload card inner sections). */}
+        <div className="documents-inner" aria-label="Documents table panel">
+          <DocumentsTable
+            rows={rows}
+            onDownload={onDownloadDoc}
+            onDelete={onDeleteDoc}
+          />
+        </div>
       </div>
     </section>
   )

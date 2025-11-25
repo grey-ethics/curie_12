@@ -1,5 +1,188 @@
 /* ==========================================================================
-   TABLES
+- file: src/styles/tables.css
+- purpose:
+  • Define global table styling and Curie-specific table variants.
+  • Provide a fixed-header + scroll-body layout for the RAG Documents table.
+  • Expose CSS “knobs” (col widths, alignment, header weight) via vars.
+- change in this revision:
+  • Prevent fixed header container from shrinking (fixes clipping when rows grow).
+  • Allow horizontal scroll syncing on the header while hiding its scrollbar.
+  • Let header/pill borders render without vertical clipping.
+  • Use separate border-collapse for the header table to preserve rounded corners.
+  • Add scoped medium-bold titles + spacing for RAG page card headers.
+========================================================================== */
+
+/* single-line comment: Base table element sizing. */
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+/* single-line comment: Base cell padding/border for all tables. */
+.table th,
+.table td {
+  padding: 8px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+
+/* ===== Documents table specific ===== */
+.documents-table {
+  table-layout: fixed;
+  width: 100%;
+
+  /* ---- WIDTH CONTROLLERS (edit these) ---- */
+  --col-no-w: 6%;
+  --col-filename-w: 36%;
+  --col-type-w: 8%;
+  --col-size-w: 10%;
+  --col-fileid-w: 12%;
+  --col-uploaderid-w: 12%;
+  --col-actions-w: 16%;
+
+  /* ---- HEADER BOLDNESS CONTROLLER (edit this) ---- */
+  --header-font-weight: 500;
+
+  /* ---- ALIGNMENT CONTROLLERS (edit these) ---- */
+  --align-no: left;
+  --align-filename: left;
+  --align-type: left;
+  --align-size: left;
+  --align-fileid: left;
+  --align-uploaderid: left;
+  --align-actions: center;
+}
+
+/* single-line comment: Per-column alignment via CSS vars. */
+.documents-table .col-no { text-align: var(--align-no); }
+.documents-table .col-filename { text-align: var(--align-filename); }
+.documents-table .col-type { text-align: var(--align-type); }
+.documents-table .col-size { text-align: var(--align-size); }
+.documents-table .col-fileid { text-align: var(--align-fileid); }
+.documents-table .col-uploaderid { text-align: var(--align-uploaderid); }
+.documents-table .col-actions { text-align: var(--align-actions); }
+
+/* single-line comment: Filename truncation for long names. */
+.documents-table .filename-cell {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* single-line comment: Actions centered with stable spacing. */
+.documents-table .actions-wrap {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ==========================================================================
+   FIXED HEADER + SCROLL BODY LAYOUT
    ========================================================================== */
-.table { width: 100%; border-collapse: collapse }
-.table th, .table td { padding: 8px; border-bottom: 1px solid var(--border) }
+
+/* single-line comment: Outer wrapper holds fixed head + scroll body and must fill parent. */
+.documents-table-outer {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+
+/* single-line comment: Fixed header container — never shrink, allow x-scroll sync, hide its scrollbar. */
+.documents-table-head {
+  flex: 0 0 auto;        /* IMPORTANT: prevents header height shrink/clipping */
+  overflow-x: auto;      /* allows scrollLeft syncing reliably */
+  overflow-y: visible;   /* avoids vertical clipping of header pill/border */
+  padding-bottom: 6px;
+  scrollbar-width: none; /* Firefox hide */
+}
+
+/* single-line comment: Hide WebKit scrollbar for header (body shows the real scrollbar). */
+.documents-table-head::-webkit-scrollbar {
+  height: 0;
+}
+
+/* single-line comment: Header table should not collapse borders so radius/border render cleanly. */
+.documents-table--head {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+/* single-line comment: Header styling (row-style pill). */
+.documents-table--head thead th {
+  font-weight: var(--header-font-weight);
+  opacity: 0.9;
+  border-bottom: none;
+}
+
+/* single-line comment: Header “row card” background/border with radius. */
+.documents-table--head thead tr {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+/* single-line comment: Make radius visible by keeping th backgrounds transparent. */
+.documents-table--head thead tr th {
+  background: transparent;
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+
+/* single-line comment: Round outer corners of the header row. */
+.documents-table--head thead tr th:first-child {
+  border-top-left-radius: 8px;
+  border-bottom-left-radius: 8px;
+}
+.documents-table--head thead tr th:last-child {
+  border-top-right-radius: 8px;
+  border-bottom-right-radius: 8px;
+}
+
+/* single-line comment: Scrollable body — scrollbar starts below fixed header. */
+.documents-table-wrap {
+  flex: 1 1 auto;
+  min-height: 0;
+  max-height: 100%;
+  overflow: auto; /* vertical + horizontal when needed */
+}
+
+/* single-line comment: Body table has no header; ensure header styles don't leak. */
+.documents-table--body thead { display: none; }
+
+/* ===== Page-level sizing: upload auto, documents fill ===== */
+.rag-documents-page {
+  height: 100%;
+  min-height: 0;
+  display: grid;
+  grid-template-rows: auto 1fr;
+}
+
+/* single-line comment: Scoped card titles for the RAG Documents page (medium-bold + clean spacing). */
+.rag-documents-page .rag-card-title {
+  font-weight: 450;        /* medium bold */
+  margin: 0 0 10px 0;      /* space below title */
+  padding: 2px 2px 0 2px;  /* slight in-card breathing room */
+  letter-spacing: 0.2px;
+}
+
+/* single-line comment: Documents card is a flex column so inner table can fill remaining height. */
+.documents-card {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+/* single-line comment: Inner panel frames table and delegates scroll to DocumentsTable body. */
+.documents-inner {
+  flex: 1 1 auto;
+  min-height: 0;
+
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 6px;
+
+  overflow: hidden;
+}

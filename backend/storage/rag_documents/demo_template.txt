@@ -1,0 +1,3 @@
+Full Name = First Name + Second Name
+
+Full Date of Birth = Date of Birth Day & Month + Date of Birth Year
