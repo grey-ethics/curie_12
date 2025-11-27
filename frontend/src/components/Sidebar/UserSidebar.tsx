@@ -1,29 +1,55 @@
-/**
- * UserSidebar
- * - Add maxlength={45} to inline rename input to mirror backend constraint.
- * - Layout/ellipsis handled by CSS so buttons stay visible.
- */
+/*
+- file: src/components/Sidebar/UserSidebar.tsx
+- purpose:
+  - User portal left sidebar.
+  - Shows a small nav area + chat sessions list with inline rename/delete.
+- changes:
+  - Added a single "Notifications" button above Chats to match requested layout.
+  - Chat session logic unchanged.
+*/
+
 import { useState } from 'react'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { useUrlChat } from '../../hooks/useUrlChat'
 
 type Editing = { id: number; title: string } | null
 
-// single-line comment: User-facing chat session list with inline rename/delete.
+// single-line comment: User-facing nav + chat session list with inline rename/delete.
 export default function UserSidebar() {
+  const nav = useNavigate()
+  const { pathname } = useLocation()
   const { sessions, active, open, create, rename, remove } = useUrlChat('user')
   const [editing, setEditing] = useState<Editing>(null)
 
+  // single-line comment: Begin inline edit for a session title.
   const beginEdit = (id: number, current: string) =>
     setEditing({ id, title: current || '' })
+
+  // single-line comment: Commit inline edit to backend then clear editing state.
   const commitEdit = async () => {
     if (!editing) return
     await rename(editing.id, editing.title)
     setEditing(null)
   }
+
+  // single-line comment: Cancel inline edit.
   const cancelEdit = () => setEditing(null)
+
+  const onGoNotifications = () => nav('/user/notifications')
 
   return (
     <aside className="sidebar">
+      <div className="sidebar-section" style={{ display: 'grid', gap: 8 }}>
+        <h4>Menu</h4>
+        <button
+          type="button"
+          onClick={onGoNotifications}
+          className={`btn-float nav-item ${pathname.startsWith('/user/notifications') ? 'active' : ''}`}
+        >
+          Notifications
+        </button>
+      </div>
+
       <div className="sidebar-section" style={{ display: 'grid', gap: 8 }}>
         <h4>Chats</h4>
         <button

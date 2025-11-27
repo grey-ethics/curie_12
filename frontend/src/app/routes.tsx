@@ -1,8 +1,9 @@
 /*
 - file: src/app/routes.tsx
 - purpose: App-level route definitions for public, user, admin, and super-admin areas.
-- change: Updated admin documents page import to new ragdocuments.tsx filename.
-- behavior: No routing paths changed.
+- changes:
+  - Added NotificationsPage routes for user and admin portals.
+  - No changes to existing routes/guards.
 */
 
 import { Routes, Route, Navigate } from 'react-router-dom'
@@ -18,6 +19,7 @@ import SuperAdminLoginPage from '../pages/SuperAdminLoginPage'
 import { useAuth } from '../state/auth'
 import UserChatPage from '../pages/user/UserChatMain'
 import AdminUserChatMain from '../pages/admin/AdminUserChatMain'
+import NotificationsPage from '../pages/NotificationsPage'
 
 // single-line comment: Central routing switch based on actor role.
 export default function RoutesView() {
@@ -55,6 +57,10 @@ export default function RoutesView() {
           path="/user/chat/:sid"
           element={actor === 'user' ? <UserChatPage /> : <Navigate to="/signin" />}
         />
+        <Route
+          path="/user/notifications"
+          element={actor === 'user' ? <NotificationsPage /> : <Navigate to="/signin" />}
+        />
 
         {/* ADMIN PORTAL */}
         <Route
@@ -76,6 +82,11 @@ export default function RoutesView() {
               <Navigate to="/signin" />
             )
           }
+        />
+
+        <Route
+          path="/admin/notifications"
+          element={actor === 'admin' ? <NotificationsPage /> : <Navigate to="/signin" />}
         />
 
         <Route

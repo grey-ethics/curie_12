@@ -1,8 +1,7 @@
 /**
  * AdminSidebar
- * - Fix: session name cell no longer pushes action buttons; CSS handles grid+ellipsis.
- * - UX: add maxlength={45} to inline rename input to mirror backend cap.
- * - No behavior changes to routing/accordion.
+ * - UX fix: clicking the already-open accordion header no longer forces navigation to /admin/admin (so /admin/notifications stays open).
+ * - Otherwise unchanged.
  */
 
 import { useEffect, useMemo, useState } from 'react'
@@ -117,9 +116,14 @@ export default function AdminSidebar() {
 
   useEffect(() => { localStorage.setItem(LS_KEY, openPanel) }, [openPanel])
 
+  // single-line comment: Toggle accordion panel and route only when switching panels.
   const toggleTo = (panel: 'admin' | 'user') => {
+    if (panel === openPanel) {
+      setOpenPanel(panel)
+      return
+    }
     setOpenPanel(panel)
-    if (panel === 'admin' && !pathname.startsWith('/admin/admin')) nav('/admin/admin')
+    if (panel === 'admin' && !pathname.startsWith('/admin/')) nav('/admin/admin')
     if (panel === 'user' && !pathname.startsWith('/admin/user')) nav('/admin/user')
   }
 

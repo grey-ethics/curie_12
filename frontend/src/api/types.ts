@@ -1,7 +1,10 @@
 /*
-- Adds types for tool invocations and run responses.
-- Extends ChatMessage to include optional tool_invocation.
-- Keeps files optional and unchanged for compatibility.
+- file: src/api/types.ts
+- purpose:
+  - Shared TypeScript types for API responses.
+  - Chat + profile + admin tables + notifications.
+- changes:
+  - Added NotificationRow interface.
 */
 
 export type Actor = 'user' | 'admin' | 'super_admin' | string
@@ -77,4 +80,21 @@ export interface AccountRow {
   role: string
   status: string
   logo_url?: string | null
+}
+
+// ---------- NOTIFICATIONS ----------
+export interface NotificationRow {
+  id: number
+  recipient_email: string
+  recipient_role: string
+  actor_email?: string | null
+  goal_type: string
+  goal_id: string
+  project_id?: string | null
+  quarter?: string | null
+  year?: string | null
+  message: string
+  seen: boolean
+  source_updated_at?: string | null
+  created_at: string
 }

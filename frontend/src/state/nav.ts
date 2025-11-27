@@ -1,8 +1,9 @@
 /*
 - file: src/state/nav.ts
 - purpose: Navigation definitions for user/admin sidebars.
-- change: Admin nav label renamed from "Upload & Documents" to "Rag Documents".
-- behavior: No path or structure changes.
+- changes:
+  - Added Notifications nav item for users.
+  - Added Notifications nav item inside admin options.
 */
 
 export type NavItem = {
@@ -14,6 +15,7 @@ export type NavItem = {
 
 export const USER_NAV: NavItem[] = [
   { id: 'chat', label: 'Chat', path: '/user/chat' },
+  { id: 'notifications', label: 'Notifications', path: '/user/notifications' },
 ]
 
 export const ADMIN_NAV: NavItem[] = [
@@ -23,6 +25,7 @@ export const ADMIN_NAV: NavItem[] = [
     path: '/admin/admin',
     children: [
       { id: 'uploads', label: 'Rag Documents', path: '/admin/admin' },
+      { id: 'notifications', label: 'Notifications', path: '/admin/notifications' },
     ],
   },
   { id: 'user', label: 'User Options', path: '/admin/user' },
